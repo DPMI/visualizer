@@ -37,6 +37,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         self.rows = 3
         self.plugins = []
+        self.current = 0
         self.transition_step = 0.0
         self.transition_enabled = False # @note should make a FSM
 
@@ -126,6 +127,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         if self.transition_step > 1.0:
             self.transition_enabled = False
             self.transition_step = 0.0
+            self.current = (self.current + 1) % self.rows
             return
 
         # the value is allowed to be > 1.0 (clamped when used) so 1.0 will
@@ -141,20 +143,25 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             (0,1,1,1)
             ]
 
+        # this block of code gets N plugins from the list (padding if len < N)
+        # and wrapping the list when needed
+        cur = self.current
+        rows = self.rows + 1 # during a transition one extra row is visible
+        pad = self.plugins + [(None,None)]*(self.rows-len(self.plugins)) # pad list to number of rows
+        plugins = pad[cur:cur+rows]
+        if len(plugins) < rows:
+            plugins += pad[:rows-len(plugins)]
+
+        # yes, this is fugly, go make a VBO or something.
+        dy = 1.0 / self.rows
+        y = 0.0
+        offset = (-1.0 / self.rows) * min(self.transition_step, 1.0)
+
         with self.drawable() as gldrawable:
             glClearColor(1,0,1,1)
             glClear(GL_COLOR_BUFFER_BIT)
             
-            # yes, this is fugly, go make a VBO or something.
-            dy = 1.0 / self.rows
-            y = 0.0
-            offset = (-1.0 / self.rows) * min(self.transition_step, 1.0)
-            
-            #print self.rows
-            #print self.plugins
-            #print offset
-            
-            for i, (plugin, mod) in itertools.izip_longest(range(self.rows+1), self.plugins[:self.rows+1], fillvalue=(None, None)):
+            for i, (plugin, mod) in enumerate(plugins):
                 if plugin is not None:
                     try:
                         plugin.render()

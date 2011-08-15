@@ -5,7 +5,7 @@ import math
 import traceback
 from OpenGL.GL import *
 
-class Test(Plugin):
+class Stub(Plugin):
     name = 'NPL stub plugin'
     author = ('David Sveningsson', 'dsv@bth.se')
     date = '2011-08-15'
@@ -22,4 +22,4 @@ class Test(Plugin):
         glClear(GL_COLOR_BUFFER_BIT)
 
 def factory():
-    return Test()
+    return Stub()
