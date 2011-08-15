@@ -20,6 +20,9 @@ class Plugin(object):
         self._texture = None
         self._depth = None
         self._current = 0
+
+    def on_packet(self, stream, frame):
+        pass # do nothing
     
     def attributes(self):
         return [x._attribute for x in self.__class__.__dict__.values() if hasattr(x, '_attribute')]

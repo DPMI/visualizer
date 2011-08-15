@@ -22,6 +22,7 @@ class Main:
         self.visualizer = Canvas(gl_config, size=(800, 600))
         self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="br0")
         self.visualizer.add_module('test')
+        self.visualizer.add_module('stub')
         self.area.pack_start(self.visualizer)
         
         self.window.show_all()

@@ -73,7 +73,7 @@ class Test(Plugin):
 
         delta = ts - self.time
         rate = self._rate * 1000000000
-        
+
         if delta > rate:
             self.time += rate
             m = 1000.0 / self._rate

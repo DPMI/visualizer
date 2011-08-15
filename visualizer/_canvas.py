@@ -5,7 +5,10 @@ import gtk.gtkgl
 import gobject
 import imp
 import itertools
+import traceback
+import time
 from OpenGL.GL import *
+from OpenGL.GLX import *
 
 import consumer
 
@@ -34,6 +37,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         self.rows = 3
         self.plugins = []
+        self.transition_step = 0.0
+        self.transition_enabled = False # @note should make a FSM
 
         # widget setup
         self.set_gl_capability(config)
@@ -44,7 +49,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect_after('realize',   self.realize)
         self.connect('configure_event', self.configure)
         self.connect('expose_event',    self.expose)
-        gobject.timeout_add(1000/25, self.expire)
+        gobject.timeout_add(1000/60, self.expire)
+        gobject.timeout_add(3000, self.transition)
 
         # setup consumer library
         self.consumer = consumer.Consumer(packets=1024, delay=0.0)
@@ -64,8 +70,11 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         try:
             mod = imp.load_module('_vis__%s' % name, *info)
             plugin = mod.factory()
-            print 'Loaded plugin "{0.name}" v{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(plugin)
-            plugin.background('ff00ff')
+            print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(plugin)
+            try:
+                plugin.background('ff00ff')
+            except:
+                traceback.print_exc()
             self.plugins.append((plugin,mod))
         finally:
             info[0].close()
@@ -101,9 +110,28 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                     plugin.on_packet(stream, frame)
                 except:
                     traceback.print_exc()
+
+        if self.transition_enabled:
+            self.transition_action()
         
         self.queue_draw()
         return True
+
+    def transition(self):
+        self.transition_enabled = True
+        self.transition_time = time.time()
+        return True
+
+    def transition_action(self):
+        if self.transition_step > 1.0:
+            self.transition_enabled = False
+            self.transition_step = 0.0
+            return
+
+        # the value is allowed to be > 1.0 (clamped when used) so 1.0 will
+        # actually be rendered.
+
+        self.transition_step = ((time.time() - self.transition_time) / 1.5) ** 3
 
     def expose(self, widget, event=None):
         c = [
@@ -120,7 +148,13 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             # yes, this is fugly, go make a VBO or something.
             dy = 1.0 / self.rows
             y = 0.0
-            for i, (plugin, mod) in itertools.izip_longest(range(self.rows), self.plugins[:self.rows], fillvalue=(None, None)):
+            offset = (-1.0 / self.rows) * min(self.transition_step, 1.0)
+            
+            #print self.rows
+            #print self.plugins
+            #print offset
+            
+            for i, (plugin, mod) in itertools.izip_longest(range(self.rows+1), self.plugins[:self.rows+1], fillvalue=(None, None)):
                 if plugin is not None:
                     try:
                         plugin.render()
@@ -129,20 +163,22 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                     plugin.bind()
                     glColor(1,1,1,1)
                 else:
-                    glColor(*c[i])
+                    glColor(0,0,0,1)
 
+                real_y = y + offset
+                
                 glBegin(GL_QUADS)
                 glTexCoord2f(0, 0)
-                glVertex3f(0, y, 0)
+                glVertex3f(0, real_y, 0)
                 
                 glTexCoord2f(0, 1)
-                glVertex3f(0, y+dy, 0)
+                glVertex3f(0, real_y+dy, 0)
                 
                 glTexCoord2f(1, 1)
-                glVertex3f(1, y+dy, 0)
+                glVertex3f(1, real_y+dy, 0)
                 
                 glTexCoord2f(1, 0)
-                glVertex3f(1, y, 0)
+                glVertex3f(1, real_y, 0)
                 glEnd()
                 
                 y += dy
@@ -151,3 +187,5 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 gldrawable.swap_buffers()
             else:
                 glFlush()
+
+        
