@@ -1,5 +1,9 @@
 from OpenGL.GL import *
 from OpenGL.GL.ARB.framebuffer_object import *
+
+# easy access
+from _cairo import CairoWidget as PluginUI
+
 class Attribute():
     def __init__(self, name, type=None):
         self.name = name
@@ -28,7 +32,6 @@ class Plugin(object):
         return [x._attribute for x in self.__class__.__dict__.values() if hasattr(x, '_attribute')]
 
     def on_resize(self, size):
-        print size
         self._generate_framebuffer(size)
 
     def render(self):

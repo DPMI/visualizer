@@ -64,13 +64,13 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         # this could be implemented in this class, but it is harder to understand "with self" 
         return GLContext(self)
 
-    def add_module(self, name):
+    def add_module(self, name, **kwargs):
         info = imp.find_module(name, ['plugins'])
         if info[0] == None:
             raise IOError, 'No such plugin: %s' % name
         try:
             mod = imp.load_module('_vis__%s' % name, *info)
-            plugin = mod.factory()
+            plugin = mod.factory(**kwargs)
             print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(plugin)
             try:
                 plugin.background('ff00ff')
@@ -96,9 +96,15 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             for plugin, mod in self.plugins:
                 plugin.on_resize((w,h))
 
+                # rerender plugins with static content
+                if plugin.interval < 0:
+                    plugin.render()
+
     def realize(self, widget, event=None):
         with self.drawable():
             glEnable(GL_TEXTURE_2D)
+            glEnable(GL_BLEND)
+            glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
     def expire(self):
         while True:
@@ -158,18 +164,26 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         offset = (-1.0 / self.rows) * min(self.transition_step, 1.0)
 
         with self.drawable() as gldrawable:
+            glViewport (0, 0, self.allocation.width, self.allocation.height / self.rows)
+            for plugin, mod in self.plugins:
+                if plugin.interval < 0: # static content, only rendered when invalidated
+                    continue
+                
+                try:
+                    plugin.render()
+                except:
+                    traceback.print_exc()
+
+            glViewport (0, 0, self.allocation.width, self.allocation.height)
             glClearColor(1,0,1,1)
             glClear(GL_COLOR_BUFFER_BIT)
-            
+
             for i, (plugin, mod) in enumerate(plugins):
                 if plugin is not None:
-                    try:
-                        plugin.render()
-                    except:
-                        traceback.print_exc()
                     plugin.bind()
                     glColor(1,1,1,1)
                 else:
+                    glBindTexture(GL_TEXTURE_2D, 0)
                     glColor(0,0,0,1)
 
                 real_y = y + offset

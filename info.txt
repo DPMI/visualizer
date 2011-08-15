@@ -1,0 +1,14 @@
+<big><b>Network Performance Lab</b></big>
+
+<big><b>Distributed Passive Measurement Infrastructure/DEMO</b></big>
+<b>Introduction</b>
+Having access to relevant and up-to-date measurement data is a key issue for network analysis in order to allow for efficient Internet performance monitoring, evaluation and management. New applications keep appearing; user and protocol behavior keep evolving; traffic mixes and characteristics are continuously changing, which implies that traffic traces may have a short span of relevance and new traces have to be collected quite regularly.
+
+In order to give a holistic view of what is going on in the network, passive measurements have to be carried out at different places simultaneously. On this background, this paper proposes a passive measurement infrastructure, consisting of coordinated measurement points, arranged in measurement areas.
+This structure allows for a efficient use of passive monitoring equipment in order to supply researchers and network managers with up-to-date and relevant data. The infrastructure is generic with regards to the capturing equipment, ranging from simple PCAP-based devices to high-end DAG cards and dedicated ASICs, in order to promote a large-scale deployment of measurement points.
+
+The infrastructure, which currently is under deployment at our university, was designed with three design requirements in mind
+  – <b>Cost</b> Access to measurement equipment should be shared among users, primarily for two reasons: First, as measurements get longer (for instance for detecting LRD behavior) a single measurement can tie up a resource for many days. Second, high quality measurement equipment is expensive and should hence have a high rate of utilization.
+  – <b>Ease of use</b> The setup and control of measurements should be easy from the user's point of view. As the complexity of measurements grows, we should hide this complexity from the users as far as possible.
+  – <b>Modularity</b> The system should be modular, this to allow independent development of separate modules. With separate modules handling security, privacy and salability (w.r.t. different link speeds as well as locations). Since we cannot predict all possible uses of the system, the system should be flexible to support different measurements as well as different measurement equipment.
+  – <b>Safety and Security</b> Measurement data should be distributed in a safe and secure manner, i.e. loss of measurement data should be avoided and access to the data restricted.

@@ -1,44 +1,27 @@
-from visualizer.plugin import Plugin, attribute
+from visualizer.plugin import Plugin, attribute, PluginUI
 import htmlcolor
 import time, calendar
 import math
 import traceback
 from OpenGL.GL import *
+from visualizer.picotime import picotime
 
 parser = htmlcolor.Parser(factory=htmlcolor.FloatFactory, components=4)
 
-class picotime:
-    def __init__(self, sec, psec):
-        self.sec = sec
-        self.psec = psec
+class UI(PluginUI):
+    def __init__(self, *args, **kwargs):
+        PluginUI.__init__(self, *args, **kwargs)
 
-    @staticmethod
-    def now():
-        n = time.time()
-        sec  = int(math.floor(n))
-        psec = picotime._sec_to_psec(n - math.floor(n))
-        return picotime(sec, psec)
-
-    def __str__(self):
-        return '<picotime %d.%d>' % (self.sec, self.psec)
-
-    def __sub__(self, rhs):
-        if not isinstance(rhs, picotime):
-            raise TypeError, 'Cannot subtract %s instance from picotime' % rhs.__class__.__name
+        self.font = PluginUI.create_font(self.cr, size=16)
+    
+    def do_render(self):
+        cr = self.cr
+        font = self.font
         
-        sec  = self.sec  - rhs.sec
-        psec = self.psec - rhs.psec
-        return picotime._sec_to_psec(sec) + psec
+        self.clear(cr)
 
-    def __iadd__(self, psec):
-        self.psec += psec
-        self.sec  += self.psec / 1000000000000
-        self.psec  = self.psec % 1000000000000
-        return self
-
-    @staticmethod
-    def _sec_to_psec(x):
-        return int(x * 1000000000000)
+        cr.translate(5,5)
+        self.text(cr, "Bitrate (Kb/s)", font)
 
 class Test(Plugin):
     name = 'NPL Test plugin'
@@ -51,7 +34,7 @@ class Test(Plugin):
     # -1 Static content (only redrawn on expose)
     #  0 As often as possible (i.e. realtime)
     #  N Fixed framerate (requests N frames per second)
-    interval = -1
+    interval = 0
 
     @attribute(type=str)
     def background(self, value):
@@ -67,6 +50,12 @@ class Test(Plugin):
         self._rate = 100
         self.time = picotime.now()
         self._accum = 0
+        self.ui = UI((1,1))
+
+    def on_resize(self, size):
+        Plugin.on_resize(self, size)
+        self.ui.on_resize(size)
+        print size
     
     def on_packet(self, stream, frame):
         ts = picotime(frame.tv_sec, frame.tv_psec)
@@ -77,18 +66,17 @@ class Test(Plugin):
         if delta > rate:
             self.time += rate
             m = 1000.0 / self._rate
-            print m
             print 'tick', '%.2fKb/s' % ((self._accum * m) / 1024)
             self._accum = 0
 
         self._accum += frame.len
-        #print self._cur - frame.timestamp
-        #if self._cur is None or self._cur - frame.timestamp > self
-        #print self._accum
 
     def on_render(self):
-        glClearColor(*self.color)
+        glClearColor(1,1,1,1)
         glClear(GL_COLOR_BUFFER_BIT)
+            
+        self.ui.render()
+        self.ui.display()
 
 def factory():
     return Test()
