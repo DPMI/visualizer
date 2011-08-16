@@ -2,13 +2,15 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import gobject
+import argparse
+import ConfigParser as configparser
 from os.path import dirname, join
 
 import consumer
 from _canvas import Canvas
 
 class Main:
-    def __init__(self):
+    def __init__(self, config_fp):
         builder = gtk.Builder()
         builder.add_from_file(join(dirname(__file__),'main.ui'))
         builder.connect_signals(self)
@@ -20,6 +22,14 @@ class Main:
 
         # setup visualizer
         self.visualizer = Canvas(gl_config, size=(800, 600))
+
+        # parse config
+        if config_fp:
+            config = configparser.SafeConfigParser()
+            config.readfp(config_fp)
+
+            print config.sections()
+
         self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="br0")
         self.visualizer.add_module('test')
         self.visualizer.add_module('stub')
@@ -47,5 +57,9 @@ class Main:
             self.notebook.set_show_tabs(False)
 
 def run():
-    main = Main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--config', type=argparse.FileType('r'), default=None, help='Configuration-file')
+    args = parser.parse_args()
+
+    main = Main(args.config)
     gtk.main()
