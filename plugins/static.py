@@ -31,7 +31,6 @@ class StaticContent(Plugin, PluginUI):
 
     # cairo
     def do_render(self):
-        print 'render static content'
         self.clear(self.cr, (0.9,0.9,1.0,1.0))
         self.cr.translate(10,5)
         self.text(self.cr, self.content, self.font, justify=True, width=self.width-20)
