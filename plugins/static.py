@@ -38,7 +38,6 @@ class StaticContent(Plugin, PluginUI):
     def on_resize(self, size):
         PluginUI.on_resize(self, size)
 
-
     # plugin
     def render(self):
         PluginUI.render(self)
