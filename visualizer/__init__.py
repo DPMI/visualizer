@@ -20,18 +20,21 @@ class Main:
         self.area = builder.get_object('area')
         gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
 
-        # setup visualizer
-        self.visualizer = Canvas(gl_config, size=(800, 600))
-
         # parse config
+        transition = 15
         if config_fp:
             config = configparser.SafeConfigParser()
             config.readfp(config_fp)
 
             print config.sections()
+            transition = config.getint('general', 'transition')
+
+        # setup visualizer
+        self.visualizer = Canvas(gl_config, size=(800, 600), transition_time=transition)
 
         self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="br0")
         self.visualizer.add_module('overview')
+        self.visualizer.add_module('overview_stats')
         self.visualizer.add_module('bitrate')
         #self.visualizer.add_module('stub')
         self.visualizer.add_module('static', filename='info.txt', text_font="Verdana 12")

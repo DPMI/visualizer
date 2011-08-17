@@ -32,7 +32,7 @@ class GLContext:
         return False # exceptions should propagate
 
 class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
-    def __init__(self, config, size):
+    def __init__(self, config, size, transition_time=15):
         gtk.DrawingArea.__init__(self)
 
         self.rows = 3
@@ -51,7 +51,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect('configure_event', self.configure)
         self.connect('expose_event',    self.expose)
         gobject.timeout_add(1000/60, self.expire)
-        gobject.timeout_add(3000, self.transition)
+        gobject.timeout_add(transition_time * 1000, self.transition)
 
         # setup consumer library
         self.consumer = consumer.Consumer(packets=1024, delay=0.0)
