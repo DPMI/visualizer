@@ -31,9 +31,11 @@ class Main:
             print config.sections()
 
         self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="br0")
-        self.visualizer.add_module('test')
-        self.visualizer.add_module('stub')
+        self.visualizer.add_module('overview')
+        self.visualizer.add_module('bitrate')
+        #self.visualizer.add_module('stub')
         self.visualizer.add_module('static', filename='info.txt', text_font="Verdana 12")
+        
         self.area.pack_start(self.visualizer)
         
         self.window.show_all()

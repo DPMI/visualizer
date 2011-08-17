@@ -27,6 +27,9 @@ class Plugin(object):
 
     def on_packet(self, stream, frame):
         pass # do nothing
+
+    def on_update(self, consumer):
+        pass # do nothing
     
     def attributes(self):
         return [x._attribute for x in self.__class__.__dict__.values() if hasattr(x, '_attribute')]

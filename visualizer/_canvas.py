@@ -149,6 +149,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             (0,1,1,1)
             ]
 
+        self.update()
+
         # this block of code gets N plugins from the list (padding if len < N)
         # and wrapping the list when needed
         cur = self.current
@@ -209,4 +211,6 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             else:
                 glFlush()
 
-        
+    def update(self):
+        for plugin, mod in self.plugins:
+            plugin.on_update(self.consumer)
