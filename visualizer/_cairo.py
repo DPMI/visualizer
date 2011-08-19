@@ -5,6 +5,7 @@ import array, math
 import cairo, pango, pangocairo
 from OpenGL.GL import *
 from OpenGL.GLU import *
+import hashlib
 
 from pango import ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT
 
@@ -119,3 +120,70 @@ class CairoWidget:
 		ctx.show_layout(layout)
 
 		return layout.get_pixel_extents()
+
+	def render_piechart(self, segment, graph_title, size, background=None):
+		cr = self.cr
+		cr.save()
+
+		start = 0.0
+		width, height = size
+		radius = min(width, height) * 0.5
+		
+		if background:
+			cr.save()
+			cr.set_source_rgba(*background)
+			cr.rectangle(0, 0, width, height);
+			cr.fill()
+			cr.restore()
+
+		def gen_color(str):
+			hash = hashlib.md5(str).hexdigest()
+			r = int(hash[0:2],16) / 255.0
+			g = int(hash[2:4],16) / 255.0
+			b = int(hash[4:6],16) / 255.0
+			return r,g,b,1
+
+		cr.set_line_width(1.0)
+		cr.translate(-width*0.5+radius, 0)
+		items = [(title, value, gen_color(title), index) for index, (title, value) in enumerate(segment.items())]
+		items.sort(key=lambda x: x[1], reverse=True)
+        
+		for title, value, color, index in items:
+			end = start +  value * (2.0 * math.pi)
+			mid = (start + end)*0.5
+			
+			cr.save()
+			cr.move_to(width/2, height/2 )
+			cr.line_to(width/2 + radius * math.cos(start), height/2 + radius * math.sin(start) )
+			cr.arc(width/2, height/2, radius, start, end )
+			cr.close_path()
+			
+			cr.set_line_width(1.0)
+			cr.set_source_rgba(*color)
+			cr.fill_preserve()
+			cr.set_source_rgba(0, 0, 0, 1.0 )
+			cr.stroke()
+			
+			start += (end-start);
+		cr.restore()
+
+		cr.save()
+		cr.translate(width*0.5 + radius + 15, 5)
+		cr.set_font_size(16)
+	
+		cr.set_source_rgba(0,0,0,1)
+		cr.show_text(graph_title)
+		cr.translate(0, 15)
+
+		for title, value, color, index in items:
+			cr.set_source_rgba(*color)
+			cr.rectangle(0, 0, 25, 25)
+			cr.fill()
+			
+			cr.translate(35, 15)
+			cr.set_source_rgba(0,0,0,1)
+			cr.show_text('%s (%2d%%)' % (title, int(value*100)))
+			
+			cr.translate(-35, 15)
+		
+		cr.restore()
