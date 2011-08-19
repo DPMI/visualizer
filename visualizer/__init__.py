@@ -36,6 +36,7 @@ class Main:
         self.visualizer.add_module('overview')
         self.visualizer.add_module('overview_stats')
         self.visualizer.add_module('bitrate')
+        self.visualizer.add_module('utilization')
         #self.visualizer.add_module('stub')
         self.visualizer.add_module('static', filename='info.txt', text_font="Verdana 12")
         

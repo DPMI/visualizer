@@ -58,6 +58,9 @@ class overview(Plugin):
     def on_packet(self, stream, pkt):
         self.inbound_cnt += pkt.len
 
+        #if pkt.tcp:
+        #    print pkt.data
+
     def on_update(self, consumer):
         n = 0
         tmp = self.inbound_cnt

@@ -21,12 +21,12 @@ class UI(PluginUI):
         self.clear(cr)
 
         cr.translate(5,5)
-        self.text(cr, "Bitrate (Kb/s)", font)
+        self.text(cr, "Network utilization", font)
 
-class Bitrate(Plugin):
-    name = 'NPL bitrate plugin'
+class Utilization(Plugin):
+    name = 'NPL network utilization plugin'
     author = ('David Sveningsson', 'dsv@bth.se')
-    date = '2011-06-08'
+    date = '2011-06-19'
     version = 0
     api = 1
 
@@ -57,20 +57,6 @@ class Bitrate(Plugin):
         self.ui.on_resize(size)
         print size
     
-    def on_packet(self, stream, frame):
-        ts = picotime(frame.tv_sec, frame.tv_psec)
-
-        delta = ts - self.time
-        rate = self._rate * 1000000000
-
-        if delta > rate:
-            self.time += rate
-            m = 1000.0 / self._rate
-            print 'tick', '%.2fKb/s' % ((self._accum * m) / 1024)
-            self._accum = 0
-
-        self._accum += frame.len
-
     def on_render(self):
         glClearColor(1,1,1,1)
         glClear(GL_COLOR_BUFFER_BIT)
@@ -79,4 +65,4 @@ class Bitrate(Plugin):
         self.ui.display()
 
 def factory():
-    return Bitrate()
+    return Utilization()
