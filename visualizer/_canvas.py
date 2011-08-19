@@ -133,7 +133,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         if self.transition_step > 1.0:
             self.transition_enabled = False
             self.transition_step = 0.0
-            self.current = (self.current + 1) % self.rows
+            self.current = (self.current + 1) % max(self.rows, len(self.plugins))
             return
 
         # the value is allowed to be > 1.0 (clamped when used) so 1.0 will
