@@ -35,6 +35,7 @@ class Main:
         self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="br0")
         self.visualizer.add_module('overview')
         self.visualizer.add_module('overview_stats')
+        self.visualizer.add_module('http_host')
         self.visualizer.add_module('bitrate')
         self.visualizer.add_module('utilization')
         #self.visualizer.add_module('stub')

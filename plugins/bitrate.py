@@ -66,7 +66,7 @@ class Bitrate(Plugin):
         if delta > rate:
             self.time += rate
             m = 1000.0 / self._rate
-            print 'tick', '%.2fKb/s' % ((self._accum * m) / 1024)
+            #print 'tick', '%.2fKb/s' % ((self._accum * m) / 1024)
             self._accum = 0
 
         self._accum += frame.len

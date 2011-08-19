@@ -108,7 +108,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
     def expire(self):
         while True:
-            stream, frame = self.consumer.poll(timeout=1.0)
+            stream, frame = self.consumer.poll(timeout=.01)
             if stream is None:
                 break
 
