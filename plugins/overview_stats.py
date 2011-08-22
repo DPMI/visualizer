@@ -85,16 +85,14 @@ class overview(Plugin):
 
         self.inbound = '%.2f%s' % (tmp, self.prefix[n])
 
+        global tcpserv_by_port
         proto = {}
         for pkt in consumer:
             if not pkt.tcphdr:
                 continue
-            
-            try:
-                serv = getservbyport(ntohs(pkt.tcphdr.dest))
-            except:
-                serv = 'Other'
-            
+
+            port = ntohs(pkt.tcphdr.dest)
+            serv = tcpserv_by_port.get(port, 'port %d' % port)
             proto[serv] = proto.get(serv, 0) + pkt.len
 
         self.ui.set_proto(proto)
@@ -110,15 +108,19 @@ class overview(Plugin):
 def factory():
     return overview()
 
-proto_by_number = {}
+tcpserv_by_port = {}
+udpserv_by_port = {}
 
 def init_lut():
-    global proto_by_number
+    global tcpserv_by_port
+    global udpserv_by_port
 
-    with open('/etc/protocols') as fp:
+    with open('/etc/services') as fp:
         for line in fp:
-            line = line.strip()
+            line = line.strip().replace('\t', ' ')
             if len(line) == 0 or line[0] == '#': continue
-            parts = line.split('\t')
-            proto_by_number[int(parts[1])] = parts[0]
+            parts = [x for x in line.split(' ') if len(x.strip()) > 0]
+            [port, proto] = parts[1].split('/')
+            if proto == 'tcp': tcpserv_by_port[int(port)] = parts[0]
+            if proto == 'udp': udpserv_by_port[int(port)] = parts[0]
 init_lut()
