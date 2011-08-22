@@ -44,7 +44,7 @@ class UI(PluginUI):
         cr.save()
 
         cr.move_to(5, 5)
-        self.text(cr, "Overview", font)
+        self.text(cr, "<u>Overview</u>", font)
 
         # ethernet protocols
         cr.translate(25, 35)
