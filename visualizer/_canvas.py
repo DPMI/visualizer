@@ -142,24 +142,16 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.transition_step = ((time.time() - self.transition_time) / 1.5) ** 3
 
     def expose(self, widget, event=None):
-        c = [
-            (1,0,0,1),
-            (1,1,0,1),
-            (0,0,1,1),
-            (0,1,1,1)
-            ]
-
         self.update()
+        self.render()
+    
+    def update(self):
+        for plugin, mod in self.plugins:
+            plugin.on_update(self.consumer)
 
-        # this block of code gets N plugins from the list (padding if len < N)
-        # and wrapping the list when needed
-        cur = self.current
-        rows = self.rows + 1 # during a transition one extra row is visible
-        pad = self.plugins + [(None,None)]*(self.rows-len(self.plugins)) # pad list to number of rows
-        plugins = pad[cur:cur+rows]
-        if len(plugins) < rows:
-            plugins += pad[:rows-len(plugins)]
-
+    def render(self):
+        plugins = self.visible_plugins()
+        
         # yes, this is fugly, go make a VBO or something.
         dy = 1.0 / self.rows
         y = 0.0
@@ -211,6 +203,13 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             else:
                 glFlush()
 
-    def update(self):
-        for plugin, mod in self.plugins:
-            plugin.on_update(self.consumer)
+    def visible_plugins(self):
+        # this block of code gets N plugins from the list (padding if len < N)
+        # and wrapping the list when needed
+        cur = self.current
+        rows = self.rows + 1 # during a transition one extra row is visible
+        pad = self.plugins + [(None,None)]*(self.rows-len(self.plugins)) # pad list to number of rows
+        plugins = pad[cur:cur+rows]
+        if len(plugins) < rows:
+            plugins += pad[:rows-len(plugins)]
+        return plugins
