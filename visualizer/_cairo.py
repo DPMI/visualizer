@@ -121,7 +121,7 @@ class CairoWidget:
 
 		return layout.get_pixel_extents()
 
-	def render_piechart(self, segment, graph_title, size, background=None):
+	def render_piechart(self, segment, graph_title, size, max_rows=None, background=None):
 		cr = self.cr
 		cr.save()
 
@@ -147,6 +147,14 @@ class CairoWidget:
 		cr.translate(-width*0.5+radius, 0)
 		items = [(title, value, gen_color(title), index) for index, (title, value) in enumerate(segment.items())]
 		items.sort(key=lambda x: x[1], reverse=True)
+
+		if max_rows is not None:
+			items = items[:max_rows]
+
+			# normalize
+			if len(items) > 0:
+				inv = 1.0 / sum([x[1] for x in items])
+				items = [(x[0], x[1] * inv, x[2], x[3]) for x in items]
         
 		for title, value, color, index in items:
 			end = start +  value * (2.0 * math.pi)
@@ -182,7 +190,7 @@ class CairoWidget:
 			
 			cr.translate(35, 15)
 			cr.set_source_rgba(0,0,0,1)
-			cr.show_text('%s (%2d%%)' % (title, int(value*100)))
+			cr.show_text('%s (%2.1f%%)' % (title, value*100))
 			
 			cr.translate(-35, 15)
 		

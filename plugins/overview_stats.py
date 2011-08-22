@@ -39,7 +39,7 @@ class UI(PluginUI):
 
         # ethernet protocols
         cr.translate(25, 35)
-        self.render_piechart(self.proto, 'TCP/UDP protocols', size=(self.height*1.25, self.height-35))
+        self.render_piechart(self.proto, 'TCP/UDP protocols', max_rows=4, size=(self.height*1.25, self.height-35))
 
         cr.identity_matrix()
         cr.move_to(150+self.height*1.25, 25)
