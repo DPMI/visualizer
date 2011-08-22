@@ -3,7 +3,7 @@ import htmlcolor
 import time, calendar
 import math
 import traceback
-import zlib, hashlib
+from socket import ntohs, getservbyport
 from OpenGL.GL import *
 from visualizer.picotime import picotime
 
@@ -15,6 +15,16 @@ class UI(PluginUI):
 
         self.parent = parent
         self.font = PluginUI.create_font(self.cr, size=12)
+        self.proto = {}
+
+    def set_proto(self, val):
+        total = sum(val.values())
+        self.proto.clear()
+        for key, value in val.items():
+            if value == 0:
+                continue
+            frac = float(value) / total
+            self.proto[key] = frac
 
     def do_render(self):
         cr = self.cr
@@ -24,7 +34,15 @@ class UI(PluginUI):
         cr.identity_matrix()
         cr.save()
 
+        # default location
         cr.move_to(5, 5)
+
+        # ethernet protocols
+        cr.translate(25, 35)
+        self.render_piechart(self.proto, 'TCP/UDP protocols', size=(self.height*1.25, self.height-35))
+
+        cr.identity_matrix()
+        cr.move_to(150+self.height*1.25, 25)
         self.text(cr,"""<b>Traffic</b>
 Inbound:  {self.inbound}
 Outbound: {self.outbound}
@@ -58,9 +76,6 @@ class overview(Plugin):
     def on_packet(self, stream, pkt):
         self.inbound_cnt += pkt.len
 
-        #if pkt.tcp:
-        #    print pkt.data
-
     def on_update(self, consumer):
         n = 0
         tmp = self.inbound_cnt
@@ -69,6 +84,20 @@ class overview(Plugin):
             n += 1
 
         self.inbound = '%.2f%s' % (tmp, self.prefix[n])
+
+        proto = {}
+        for pkt in consumer:
+            if not pkt.tcphdr:
+                continue
+            
+            try:
+                serv = getservbyport(ntohs(pkt.tcphdr.dest))
+            except:
+                serv = 'Other'
+            
+            proto[serv] = proto.get(serv, 0) + pkt.len
+
+        self.ui.set_proto(proto)
 
     def on_render(self):
         glClearColor(1,1,1,1)
