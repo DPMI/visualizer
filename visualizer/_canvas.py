@@ -7,6 +7,8 @@ import imp
 import itertools
 import traceback
 import time
+import threading
+from functools import wraps
 from OpenGL.GL import *
 from OpenGL.GLX import *
 
@@ -31,6 +33,37 @@ class GLContext:
         gldrawable.gl_end()
         return False # exceptions should propagate
 
+class Consumer(threading.Thread):
+    def __init__(self, **kwargs):
+        threading.Thread.__init__(self)
+        self.plugins = []
+        self.consumer = consumer.Consumer(**kwargs)
+        self.running = True
+
+    def stop(self):
+        self.running = False
+    
+    def run(self):
+        while self.running:
+            stream, frame = self.consumer.poll(timeout=.5)
+            if stream is None:
+                    continue
+
+            for plugin, mod in self.plugins:
+                try:
+                    with plugin:
+                        plugin.on_packet(stream, frame)
+                except:
+                    traceback.print_exc()
+
+            for plugin, mod in self.plugins:
+                with plugin:
+                    plugin.on_update(self.consumer)
+
+    def add_stream(self, *args, **kwargs):
+        self.consumer.add_stream(*args, **kwargs)
+    add_stream.__doc__ = consumer.Consumer.add_stream.__doc__
+
 class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def __init__(self, config, size, transition_time=15):
         gtk.DrawingArea.__init__(self)
@@ -50,15 +83,17 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect_after('realize',   self.realize)
         self.connect('configure_event', self.configure)
         self.connect('expose_event',    self.expose)
+        self.connect_after('destroy', self.destroy)
         gobject.timeout_add(1000/60, self.expire)
         gobject.timeout_add(transition_time * 1000, self.transition)
 
         # setup consumer library
-        self.consumer = consumer.Consumer(packets=1024, delay=0.0)
+        self.consumer = Consumer(packets=2048, delay=0.0)
+        self.consumer.start()
 
+    @wraps(Consumer.add_stream)
     def add_stream(self, *args, **kwargs):
         self.consumer.add_stream(*args, **kwargs)
-    add_stream.__doc__ = consumer.Consumer.add_stream.__doc__
 
     def drawable(self):
         # this could be implemented in this class, but it is harder to understand "with self" 
@@ -77,6 +112,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             except:
                 traceback.print_exc()
             self.plugins.append((plugin,mod))
+            self.consumer.plugins = self.plugins
         finally:
             info[0].close()
 
@@ -106,18 +142,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             glEnable(GL_BLEND)
             glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
+    def destroy(self, widget, event=None):
+        self.consumer.stop()
+    
     def expire(self):
-        while True:
-            stream, frame = self.consumer.poll(timeout=.01)
-            if stream is None:
-                break
-
-            for plugin, mod in self.plugins:
-                try:
-                    plugin.on_packet(stream, frame)
-                except:
-                    traceback.print_exc()
-
         if self.transition_enabled:
             self.transition_action()
         
@@ -142,13 +170,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.transition_step = ((time.time() - self.transition_time) / 1.5) ** 3
 
     def expose(self, widget, event=None):
-        self.update()
         self.render()
     
-    def update(self):
-        for plugin, mod in self.plugins:
-            plugin.on_update(self.consumer)
-
     def render(self):
         plugins = self.visible_plugins()
         
@@ -164,7 +187,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                     continue
                 
                 try:
-                    plugin.render()
+                    with plugin:
+                        plugin.render()
                 except:
                     traceback.print_exc()
 

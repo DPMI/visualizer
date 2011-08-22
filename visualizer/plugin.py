@@ -1,5 +1,6 @@
 from OpenGL.GL import *
 from OpenGL.GL.ARB.framebuffer_object import *
+from threading import Lock
 
 # easy access
 from _cairo import CairoWidget as PluginUI
@@ -24,7 +25,20 @@ class Plugin(object):
         self._texture = None
         self._depth = None
         self._current = 0
+        self._lock = Lock()
 
+    def lock(self):
+        self._lock.acquire()
+
+    def unlock(self):
+        self._lock.release()
+
+    def __enter__(self):
+        self.lock()
+
+    def __exit__(self, type, value, traceback):
+        self.unlock()
+    
     def on_packet(self, stream, frame):
         pass # do nothing
 
