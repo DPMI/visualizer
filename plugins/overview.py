@@ -80,7 +80,11 @@ class overview(Plugin):
         for pkt in consumer:
             if pkt.ipv4:
                 ethernet['ipv4'] += 1
-                proto = proto_by_number[pkt.ipv4.ip_p]
+                try:
+                    proto = proto_by_number[pkt.ipv4.ip_p]
+                except:
+                    print pkt.ipv4.ip_p
+                    traceback.print_exc()
                 transport[proto] = transport.get(proto, 0) + 1
             elif pkt.ipv6:
                 ethernet['ipv6'] += 1
