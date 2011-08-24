@@ -88,7 +88,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         gobject.timeout_add(transition_time * 1000, self.transition)
 
         # setup consumer library
-        self.consumer = Consumer(packets=2048, delay=0.0)
+        self.consumer = Consumer(packets=4096, delay=0.0)
         self.consumer.start()
 
     @wraps(Consumer.add_stream)
