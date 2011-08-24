@@ -23,6 +23,7 @@ class HTTPHost(Plugin, PluginUI):
         self.font_b = PluginUI.create_font(self.cr, size=12)
         self.hosts = sqlite3.connect(':memory:')
         self.hosts.execute("CREATE TABLE hosts (host TEXT PRIMARY KEY, hit INT default 1)")
+        self.tmp = []
 
     def on_resize(self, size):
         Plugin.on_resize(self, size)
@@ -43,10 +44,7 @@ class HTTPHost(Plugin, PluginUI):
 
         if 'Host' in headers:
             host = headers['Host']
-            cur = self.hosts.cursor()
-            cur.execute('UPDATE hosts SET hit = hit+1 WHERE host = ?', (host,))
-            if cur.rowcount == 0:
-                cur.execute('INSERT INTO hosts (host) VALUES (?)', (host,))
+            self.tmp.append(host)
 
     # cairo
     def do_render(self):
@@ -56,6 +54,17 @@ class HTTPHost(Plugin, PluginUI):
 
         cr.translate(5,5)
         self.text(cr, "<u>Top HTTP hostnames</u>", self.font_a)
+
+
+        # fulhack!
+        if len(self.tmp) > 0:
+            cur = self.hosts.cursor()
+            for host in self.tmp:
+                cur.execute('UPDATE hosts SET hit = hit+1 WHERE host = ?', (host,))
+                if cur.rowcount == 0:
+                    cur.execute('INSERT INTO hosts (host) VALUES (?)', (host,))
+            self.tmp = []
+
         
         for host, hits in self.hosts.execute('SELECT host, hit FROM hosts ORDER BY hit DESC LIMIT 10').fetchall():
             cr.translate(0,25)
