@@ -76,7 +76,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # widget setup
         self.set_gl_capability(config)
-        self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK|gtk.gdk.POINTER_MOTION_MASK)
         self.set_size_request(size[0], size[1])
                 
         # Connect the relevant signals.
@@ -107,10 +107,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             mod = imp.load_module('_vis__%s' % name, *info)
             plugin = mod.factory(**kwargs)
             print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(plugin)
-            try:
-                plugin.background('ff00ff')
-            except:
-                traceback.print_exc()
+            #try:
+            #    plugin.background('ff00ff')
+            #except:
+            #    traceback.print_exc()
             self.plugins.append((plugin,mod))
             self.consumer.plugins = self.plugins
         finally:

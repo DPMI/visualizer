@@ -10,6 +10,8 @@ import consumer
 from _canvas import Canvas
 
 class Main:
+    cursor_timeout = 2000 # delay in ms until hiding cursor
+
     def __init__(self, config_fp):
         builder = gtk.Builder()
         builder.add_from_file(join(dirname(__file__),'main.ui'))
@@ -29,10 +31,15 @@ class Main:
             print config.sections()
             transition = config.getint('general', 'transition')
 
+        # cursor
+        pix = gtk.gdk.Pixmap(None, 1, 1, 1)
+        color = gtk.gdk.Color()
+        self.cursor = gtk.gdk.Cursor(pix, pix, color, color, 0, 0)
+
         # setup visualizer
         self.visualizer = Canvas(gl_config, size=(800, 600), transition_time=transition)
 
-        self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="br0")
+        self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="eth0")
         self.visualizer.add_module('overview')
         self.visualizer.add_module('overview_stats')
         self.visualizer.add_module('http_host')
@@ -40,6 +47,7 @@ class Main:
         self.visualizer.add_module('utilization')
         #self.visualizer.add_module('stub')
         self.visualizer.add_module('static', filename='info.txt', text_font="Verdana 12")
+        self.visualizer.connect('motion_notify_event', self.cursor_show)
         
         self.area.pack_start(self.visualizer)
         
@@ -58,10 +66,27 @@ class Main:
 
         if self._fullscreen:
             self.window.unfullscreen()
+            self.visualizer.window.set_cursor(None)
             self.notebook.set_show_tabs(True)
         else:
             self.window.fullscreen()
             self.notebook.set_show_tabs(False)
+            self.cursor_timer = gobject.timeout_add(self.cursor_timeout, self.cursor_hide)
+
+    def cursor_hide(self):
+        if not self._fullscreen:
+            return
+
+        self.visualizer.window.set_cursor(self.cursor)
+    
+    def cursor_show(self, window, event):
+        if not self._fullscreen:
+            return
+
+        if self.visualizer.window.get_cursor() is None:
+            gobject.source_remove(self.cursor_timer)
+            self.cursor_timer = gobject.timeout_add(self.cursor_timeout, self.cursor_hide)
+        self.visualizer.window.set_cursor(None)
 
 def run():
     parser = argparse.ArgumentParser()
