@@ -4,13 +4,17 @@ import gtk
 import gobject
 import argparse
 import ConfigParser as configparser
+import sys
 from os.path import dirname, join
+import re
+import traceback
 
 import consumer
 from _canvas import Canvas
 
 class Main:
     cursor_timeout = 2000 # delay in ms until hiding cursor
+    transition = 15
 
     def __init__(self, config_fp):
         builder = gtk.Builder()
@@ -22,14 +26,41 @@ class Main:
         self.area = builder.get_object('area')
         gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
 
+        # config defaults
+        self.transition = Main.transition
+        self.consumers = []
+
         # parse config
-        transition = 15
         if config_fp:
             config = configparser.SafeConfigParser()
             config.readfp(config_fp)
 
-            print config.sections()
             transition = config.getint('general', 'transition')
+
+            pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
+            for section in config.sections():
+                x = pattern.match(section)
+                if x is None:
+                    print >> sys.stderr, 'Failed to parse section "%s", ignoring.' % section
+                    continue
+                ns, key, index = x.groups()
+                if ns is None:
+                    ns = key
+                else:
+                    ns = ns[:-1] # strip trailing ':'
+
+                if ns == 'consumer':
+                    host = config.get(section, 'host')
+                    port = config.getint(section, 'port')
+                    try:
+                        self.consumers.append(consumer.Consumer(host, port))
+                    except:
+                        traceback.print_exc()
+                        print >> sys.stderr, 'Consumer', host, port
+                elif ns == 'plugin':
+                    print 'plugin', key
+
+            print self.consumers
 
         # cursor
         pix = gtk.gdk.Pixmap(None, 1, 1, 1)
@@ -39,7 +70,8 @@ class Main:
         # setup visualizer
         self.visualizer = Canvas(gl_config, size=(800, 600), transition_time=transition)
 
-        self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="eth0")
+
+        #self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="eth0")
         self.visualizer.add_module('overview')
         self.visualizer.add_module('overview_stats')
         self.visualizer.add_module('http_host')

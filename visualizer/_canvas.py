@@ -60,9 +60,9 @@ class Consumer(threading.Thread):
                 with plugin:
                     plugin.on_update(self.consumer)
 
-    def add_stream(self, *args, **kwargs):
-        self.consumer.add_stream(*args, **kwargs)
-    add_stream.__doc__ = consumer.Consumer.add_stream.__doc__
+    #def add_stream(self, *args, **kwargs):
+    #    self.consumer.add_stream(*args, **kwargs)
+    #add_stream.__doc__ = consumer.Consumer.add_stream.__doc__
 
 class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def __init__(self, config, size, transition_time=15):
@@ -83,17 +83,17 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect_after('realize',   self.realize)
         self.connect('configure_event', self.configure)
         self.connect('expose_event',    self.expose)
-        self.connect_after('destroy', self.destroy)
+        #self.connect_after('destroy', self.destroy)
         gobject.timeout_add(1000/60, self.expire)
         gobject.timeout_add(transition_time * 1000, self.transition)
 
         # setup consumer library
-        self.consumer = Consumer(packets=4096, delay=0.0)
-        self.consumer.start()
+        #self.consumer = Consumer(packets=4096, delay=0.0)
+        #self.consumer.start()
 
-    @wraps(Consumer.add_stream)
-    def add_stream(self, *args, **kwargs):
-        self.consumer.add_stream(*args, **kwargs)
+    #@wraps(Consumer.add_stream)
+    #def add_stream(self, *args, **kwargs):
+    #    self.consumer.add_stream(*args, **kwargs)
 
     def drawable(self):
         # this could be implemented in this class, but it is harder to understand "with self" 
@@ -112,7 +112,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             #except:
             #    traceback.print_exc()
             self.plugins.append((plugin,mod))
-            self.consumer.plugins = self.plugins
+            #self.consumer.plugins = self.plugins
         finally:
             info[0].close()
 
@@ -142,8 +142,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             glEnable(GL_BLEND)
             glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-    def destroy(self, widget, event=None):
-        self.consumer.stop()
+    #def destroy(self, widget, event=None):
+    #    self.consumer.stop()
     
     def expire(self):
         if self.transition_enabled:
