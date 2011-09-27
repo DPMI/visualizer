@@ -4,7 +4,7 @@ import gtk
 import gobject
 import argparse
 import ConfigParser as configparser
-import sys
+import sys, os
 from os.path import dirname, join
 import re
 import traceback
@@ -35,7 +35,7 @@ class Main:
             config = configparser.SafeConfigParser()
             config.readfp(config_fp)
 
-            transition = config.getint('general', 'transition')
+            self.transition = config.getint('general', 'transition')
 
             pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
             for section in config.sections():
@@ -68,8 +68,7 @@ class Main:
         self.cursor = gtk.gdk.Cursor(pix, pix, color, color, 0, 0)
 
         # setup visualizer
-        self.visualizer = Canvas(gl_config, size=(800, 600), transition_time=transition)
-
+        self.visualizer = Canvas(gl_config, size=(800, 600), transition_time=self.transition)
 
         #self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="eth0")
         self.visualizer.add_module('overview')
@@ -124,6 +123,12 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--config', type=argparse.FileType('r'), default=None, help='Configuration-file')
     args = parser.parse_args()
+
+    if not args.config:
+        if not os.path.exists('visualizer.conf'):
+            print >> sys.stderr, 'No config-file specified and "visualizer.conf" not found'
+            sys.exit(1)
+        args.config = open('visualizer.conf')
 
     main = Main(args.config)
     gtk.main()
