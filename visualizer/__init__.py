@@ -22,6 +22,7 @@ class Main:
         builder.connect_signals(self)
         self.window = builder.get_object('main')
         self.notebook = builder.get_object('notebook1')
+        self.cursor_timer = None
 
         # ctrl+q shortcut
         def quit(*args, **kwargs):
@@ -131,7 +132,8 @@ class Main:
             return
 
         if self.visualizer.window.get_cursor() is None:
-            gobject.source_remove(self.cursor_timer)
+            if self.cursor_timer:
+                gobject.source_remove(self.cursor_timer)
             self.cursor_timer = gobject.timeout_add(self.cursor_timeout, self.cursor_hide)
         self.visualizer.window.set_cursor(None)
 
