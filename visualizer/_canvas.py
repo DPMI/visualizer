@@ -107,6 +107,11 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             mod = imp.load_module('_vis__%s' % name, *info)
             plugin = mod.factory(**kwargs)
             print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(plugin)
+
+            req = getattr(plugin, 'dataset', [])
+            for ds in req:
+                if not ds in self.dataset:
+                    raise RuntimeError, 'Plugin "%s" requires dataset "%s" which is not available' % (name, ds)
             #try:
             #    plugin.background('ff00ff')
             #except:

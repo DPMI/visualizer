@@ -93,6 +93,9 @@ class Main:
         # setup visualizer
         self.visualizer = Canvas(gl_config, size=(800, 600), transition_time=self.transition)
 
+        # fulhack
+        self.visualizer.dataset = self.dataset
+
         # load plugins
         pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
         for section in config.sections():
@@ -107,7 +110,10 @@ class Main:
                 ns = ns[:-1] # strip trailing ':'
                 
             if ns == 'plugin':
-                self.visualizer.add_module(key, **dict(config.items(section)))
+                try:
+                    self.visualizer.add_module(key, **dict(config.items(section)))
+                except Exception, e:
+                    print >> sys.stderr, e
 
         #self.visualizer.add_module('overview')
         #self.visualizer.add_module('overview_stats')

@@ -29,6 +29,7 @@ class Bitrate(Plugin):
     date = '2011-06-08'
     version = 0
     api = 1
+    dataset = ['bitrate']
 
     # How often this plugin needs to render
     # -1 Static content (only redrawn on expose)

@@ -29,6 +29,7 @@ class Utilization(Plugin):
     date = '2011-06-19'
     version = 0
     api = 1
+    dataset = ['utilization']
 
     # How often this plugin needs to render
     # -1 Static content (only redrawn on expose)

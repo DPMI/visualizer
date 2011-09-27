@@ -63,6 +63,7 @@ class overview(Plugin):
     version = 1
     api = 1
     interval = 1
+    dataset = ['overview']
 
     def __init__(self):
         Plugin.__init__(self)

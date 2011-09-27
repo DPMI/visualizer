@@ -14,6 +14,7 @@ class HTTPHost(Plugin, PluginUI):
     version = 0
     api = 1
     interval = 60
+    dataset = ['http_hostname']
 
     def __init__(self):
         Plugin.__init__(self)

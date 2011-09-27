@@ -57,6 +57,7 @@ class overview(Plugin):
     version = 1
     api = 1
     interval = 1
+    dataset = ['overview']
 
     prefix = ['', 'Kb', 'Mb', 'Gb', 'Tb']
 
