@@ -2,6 +2,7 @@ import socket
 import json
 from email.message import Message
 from email.parser import FeedParser
+import httplib
 
 class Consumer(object):
     def __init__(self, host, port):
@@ -9,11 +10,14 @@ class Consumer(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
     
-        print self.get('/info')
+        payload = self.get('/info').get_payload()
+        info = json.loads(payload)
+        
+        self.dataset = info['dataset']
 
     def get(self, path):
         headers = {
-            'Acccept': 'application/json',
+            'Accept': 'application/json',
             'Host': self.peer[0]
         }
         return self.request('GET %s HTTP/1.1' % path, headers)
@@ -24,7 +28,15 @@ class Consumer(object):
         request = Message()
         for k,v in headers.iteritems():
             request[k] = v
-        self.sock.send(query + "\n" + request.as_string())
+        self.sock.send(query + "\r\n" + request.as_string())
+
+        buffer = self.sock.recv(4096)
+        [result, data] = buffer.split('\r\n', 1)
+        result = result.split(' ')
+
+        if int(result[1]) != 200:
+            raise httplib.BadStatusLine(' '.join(result))
+
         response = FeedParser()
-        response.feed(self.sock.recv(4096))
+        response.feed(data)
         return response.close()
