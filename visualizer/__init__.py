@@ -23,6 +23,14 @@ class Main:
         self.window = builder.get_object('main')
         self.notebook = builder.get_object('notebook1')
 
+        # ctrl+q shortcut
+        def quit(*args, **kwargs):
+            gtk.main_quit()
+        gtk.accel_map_add_entry("<visualizer>/quit", gtk.accelerator_parse("q")[0], gtk.gdk.CONTROL_MASK)
+        self.accel_group = gtk.AccelGroup()
+        self.accel_group.connect_by_path("<visualizer>/quit", quit)
+        self.window.add_accel_group(self.accel_group)
+
         self.area = builder.get_object('area')
         gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
 
@@ -69,7 +77,6 @@ class Main:
         # setup visualizer
         self.visualizer = Canvas(gl_config, size=(800, 600), transition_time=self.transition)
 
-        #self.visualizer.add_stream('01:00:00:00:00:01', consumer.SOURCE_ETHERNET, iface="eth0")
         self.visualizer.add_module('overview')
         self.visualizer.add_module('overview_stats')
         self.visualizer.add_module('http_host')
