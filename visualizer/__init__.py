@@ -31,36 +31,35 @@ class Main:
         self.consumers = []
 
         # parse config
-        if config_fp:
-            config = configparser.SafeConfigParser()
-            config.readfp(config_fp)
+        config = configparser.SafeConfigParser()
+        config.readfp(config_fp)
+        
+        self.transition = config.getint('general', 'transition')
+        
+        pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
+        for section in config.sections():
+            x = pattern.match(section)
+            if x is None:
+                print >> sys.stderr, 'Failed to parse section "%s", ignoring.' % section
+                continue
+            ns, key, index = x.groups()
+            if ns is None:
+                ns = key
+            else:
+                ns = ns[:-1] # strip trailing ':'
+                
+            if ns == 'consumer':
+                host = config.get(section, 'host')
+                port = config.getint(section, 'port')
+                try:
+                    self.consumers.append(consumer.Consumer(host, port))
+                except:
+                    traceback.print_exc()
+                    print >> sys.stderr, 'Consumer', host, port
+            elif ns == 'plugin':
+                print 'plugin', key
 
-            self.transition = config.getint('general', 'transition')
-
-            pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
-            for section in config.sections():
-                x = pattern.match(section)
-                if x is None:
-                    print >> sys.stderr, 'Failed to parse section "%s", ignoring.' % section
-                    continue
-                ns, key, index = x.groups()
-                if ns is None:
-                    ns = key
-                else:
-                    ns = ns[:-1] # strip trailing ':'
-
-                if ns == 'consumer':
-                    host = config.get(section, 'host')
-                    port = config.getint(section, 'port')
-                    try:
-                        self.consumers.append(consumer.Consumer(host, port))
-                    except:
-                        traceback.print_exc()
-                        print >> sys.stderr, 'Consumer', host, port
-                elif ns == 'plugin':
-                    print 'plugin', key
-
-            print self.consumers
+        print self.consumers
 
         # cursor
         pix = gtk.gdk.Pixmap(None, 1, 1, 1)
