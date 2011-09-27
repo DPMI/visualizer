@@ -7,7 +7,7 @@ class Consumer(object):
     def __init__(self, host, port):
         self.peer = (host,port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect(('10.0.42.254',80))
+        self.sock.connect((host, port))
     
         print self.get('/info')
 
