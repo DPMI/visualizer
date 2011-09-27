@@ -43,6 +43,16 @@ class Main:
         config.readfp(config_fp)
         
         self.transition = config.getint('general', 'transition')
+
+        self.fullscreen = False
+        try:
+            self.fullscreen = config.getboolean('general', 'fullscreen')
+        except:
+            pass
+
+        if self.fullscreen:
+            self.window.fullscreen()
+            self.notebook.set_show_tabs(False)
         
         pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
         for section in config.sections():
