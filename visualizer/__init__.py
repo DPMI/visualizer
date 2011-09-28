@@ -50,10 +50,6 @@ class Main:
             self.fullscreen = config.getboolean('general', 'fullscreen')
         except:
             pass
-
-        if self.fullscreen:
-            self.window.fullscreen()
-            self.notebook.set_show_tabs(False)
         
         # retrieve consumers from config
         pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
@@ -128,6 +124,11 @@ class Main:
         
         self.window.show_all()
         self._fullscreen = False
+
+        if self.fullscreen:
+            self.window.fullscreen()
+            self.notebook.set_show_tabs(False)
+            self.visualizer.window.set_cursor(self.cursor)
 
     def destroy(self, widget, data=None):
         gtk.main_quit()
