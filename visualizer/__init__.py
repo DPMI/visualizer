@@ -8,6 +8,7 @@ import sys, os
 from os.path import dirname, join
 import re
 import traceback
+import time
 
 import consumer
 from _canvas import Canvas
@@ -80,6 +81,15 @@ class Main:
                 self.dataset[ds] = con
 
         print self.dataset
+
+        self.n = 0
+        def foo(self, *args):
+            print args, self.n
+            self.n += 1
+            time.sleep(0.1)
+            return True
+
+        gobject.idle_add(foo, self)
 
         # cursor
         pix = gtk.gdk.Pixmap(None, 1, 1, 1)
