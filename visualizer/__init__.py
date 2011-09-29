@@ -35,6 +35,7 @@ class Main:
         self.accel_group = gtk.AccelGroup()
         self.accel_group.connect_by_path("<visualizer>/quit", quit)
         self.window.add_accel_group(self.accel_group)
+        signal.signal(signal.SIGINT, quit)
 
         self.area = builder.get_object('area')
         gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
