@@ -36,7 +36,7 @@ class HTTPHost(Plugin, PluginUI):
     def do_render(self):
         cr = self.cr
         cr.save()
-        self.clear(cr, (1,1,1,1))
+        self.clear(self.cr, (0.95, 0.95, 1.0, 1.0))
 
         cr.translate(5,5)
         self.text(cr, "<u>Top HTTP hostnames</u>", self.font_a)
