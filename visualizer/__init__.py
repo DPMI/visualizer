@@ -10,6 +10,8 @@ import re
 import traceback
 import time
 from select import select
+import signal
+import errno
 
 import consumer
 from _canvas import Canvas
@@ -89,8 +91,14 @@ class Main:
             if self.visualizer.transition_enabled:
                 timeout = 0
 
-            rl,wl,xl = select(self.consumers,[],[],timeout)
-            
+            try:
+                rl,wl,xl = select(self.consumers,[],[],timeout)
+            except Exception, e:
+                if e.args[0] == errno.EINTR:
+                    # reloading?
+                    return True
+                raise
+
             for con in rl:
                 con.pull()
 
@@ -138,13 +146,17 @@ class Main:
         self.visualizer.connect('motion_notify_event', self.cursor_show)
         
         self.area.pack_start(self.visualizer)
-        
         self.window.show_all()
 
         if self.fullscreen:
             self.window.fullscreen()
             self.notebook.set_show_tabs(False)
             self.visualizer.window.set_cursor(self.cursor)
+
+        signal.signal(signal.SIGHUP, self.reload)
+
+    def reload(self, signum, frame):
+        print 'herp derp, should reload config...'
 
     def destroy(self, widget, data=None):
         gtk.main_quit()
@@ -182,6 +194,13 @@ class Main:
         self.visualizer.window.set_cursor(None)
 
 def run():
+    print >> sys.stderr
+    print >> sys.stderr, '#' * 60
+    print >> sys.stderr, 'DPMI Visualizer 0.7'
+    print >> sys.stderr, '(c) 2011 David Sveningsson <dsv@bth.se>'
+    print >> sys.stderr, 'GNU GPLv3'
+    print >> sys.stderr
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--config', type=argparse.FileType('r'), default=None, help='Configuration-file')
     args = parser.parse_args()
@@ -192,5 +211,16 @@ def run():
             sys.exit(1)
         args.config = open('visualizer.conf')
 
-    main = Main(args.config)
-    gtk.main()
+    pidlock = '/var/run/visualizer.lock'
+    if os.path.exists(pidlock):
+        print >> sys.stderr, pidlock, 'exists, if the visualizer isn\'t running manually remove the file before continuing'
+        sys.exit(1)
+    
+    with open(pidlock, 'w') as pid:
+        pid.write(str(os.getpid()))
+
+    try:
+        main = Main(args.config)
+        gtk.main()
+    finally:
+        os.unlink(pidlock)
