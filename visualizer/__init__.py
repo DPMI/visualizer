@@ -135,12 +135,11 @@ class Main:
         #self.visualizer.add_module('utilization')
         #self.visualizer.add_module('stub')
         #self.visualizer.add_module('static', filename='info.txt', text_font="Verdana 12")
-        #self.visualizer.connect('motion_notify_event', self.cursor_show)
+        self.visualizer.connect('motion_notify_event', self.cursor_show)
         
         self.area.pack_start(self.visualizer)
         
         self.window.show_all()
-        self._fullscreen = False
 
         if self.fullscreen:
             self.window.fullscreen()
@@ -151,13 +150,13 @@ class Main:
         gtk.main_quit()
 
     def on_main_window_state_event(self, window, event):
-        self._fullscreen = bool(gtk.gdk.WINDOW_STATE_FULLSCREEN & event.new_window_state)
+        self.fullscreen = bool(gtk.gdk.WINDOW_STATE_FULLSCREEN & event.new_window_state)
 
     def on_area_button_press_event(self, widget, event):
         if event.type != gtk.gdk._2BUTTON_PRESS:
             return
 
-        if self._fullscreen:
+        if self.fullscreen:
             self.window.unfullscreen()
             self.visualizer.window.set_cursor(None)
             self.notebook.set_show_tabs(True)
@@ -167,13 +166,13 @@ class Main:
             self.cursor_timer = gobject.timeout_add(self.cursor_timeout, self.cursor_hide)
 
     def cursor_hide(self):
-        if not self._fullscreen:
+        if not self.fullscreen:
             return
 
         self.visualizer.window.set_cursor(self.cursor)
     
     def cursor_show(self, window, event):
-        if not self._fullscreen:
+        if not self.fullscreen:
             return
 
         if self.visualizer.window.get_cursor() is None:
