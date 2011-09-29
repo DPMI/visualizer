@@ -10,7 +10,7 @@ import numpy
 
 def csv_filter(value):
     for line in value.splitlines():
-        yield tuple(line.split(';'))
+        yield tuple([float(x) for x in line.split(';')])
 
 class Graph(Plugin, PluginUI):
     name = 'NPL Graph plugin'
@@ -18,7 +18,7 @@ class Graph(Plugin, PluginUI):
     date = '2011-09-29'
     version = 0
     api = 1
-    interval = -1
+    interval = 10
 
     def __init__(self):
         Plugin.__init__(self)
@@ -29,10 +29,11 @@ class Graph(Plugin, PluginUI):
         self.font_b = PluginUI.create_font(self.cr, size=12)
         self.dataset = []
         self.filter = {}
-        self.data = numpy.array([0,0]*100)
-        self.size = 100
-        self.rp = 0
-        self.wp = 0
+        self.data = numpy.array([0]*100, numpy.float)
+        self.n_samples = 100
+        self.pos = 0
+        self._range_x = (-100,0)
+        self.offset = None
 
     @attribute(type=str)
     def source(self, value):
@@ -44,32 +45,70 @@ class Graph(Plugin, PluginUI):
     def title(self, value):
         self._title = value
 
+    @attribute(type=str)
+    def range_x(self, value):
+        self._range_x = tuple([float(x) for x in value.split(':')])
+        self.interval = 1.0 / (float(abs(self._range_x[0])) / self.n_samples)
+
+    @attribute(type=str)
+    def range_y(self, value):
+        pass
+
     @attribute(type=int)
     def samples(self, value):
-        self.data = numpy.array([0,0]*int(value))
-        self.size = int(value)
+        self.data = numpy.array([0]*int(value), numpy.float)
+        self.n_samples = int(value)
+        self.interval = 1.0 / (float(abs(self._range_x[0])) / self.n_samples)
 
     def on_data(self, dataset, raw):
-        print [raw]
+        delta = float(abs(self._range_x[0])) / self.n_samples
         flt = self.filter[dataset]
-        #for x,y in flt(raw):
-        #    self.data[self.wp][0] = x
-        #    self.data[self.wp][1] = y
-        #    self.wp = (self.wp+1)%self.size
-        #print self.data
+        for x,y in flt(raw):
+            if not self.offset:
+                self.offset = x
+                self.iteration = 1
+            elif x - self.offset > delta:
+                self.pos += 1
+                self.pos %= self.n_samples
+                self.iteration = 1
+                self.data[self.pos]
+                self.offset += delta
+            #print x,y,delta,self.offset,self.pos,self.iteration
+            
+            prev = self.data[self.pos]
+            tmp = ((y-prev)/(self.iteration))+prev # inc. avg.
+            self.iteration += 1
+            self.data[self.pos] = tmp
 
     # cairo
     def do_render(self):
         cr = self.cr
+        cr.save()
+
         self.clear(cr, (0.95, 0.95, 1.0, 1.0))
         cr.translate(5, 5)
         self.text(cr, "<u>%s</u>" % self._title, self.font_a)
+
+        w = float(self.size[0]) / (self.n_samples-1)
+        n = 0
+        c = (self.pos+1) % self.n_samples
+        cr.move_to(n, self.data[c]+25)
+        while True:
+            n += w
+            c = (c+1)%self.n_samples
+            if c == self.pos: break
+
+            cr.line_to(n, self.data[c]+25)
+        cr.stroke()
+
+        cr.restore()
 
     def on_resize(self, size):
         PluginUI.on_resize(self, size)
 
     # plugin
     def render(self):
+        PluginUI.invalidate(self)
         PluginUI.render(self)
 
     def bind(self):

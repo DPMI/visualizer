@@ -112,6 +112,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 return
             print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(plugin)
 
+            plugin._last_render = 0
             req = getattr(plugin, 'dataset', [])
             for ds in req:
                 if not ds in self.dataset:
@@ -195,16 +196,23 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         dy = 1.0 / self.rows
         y = 0.0
         offset = (-1.0 / self.rows) * min(self.transition_step, 1.0)
+        t = time.time()
 
         with self.drawable() as gldrawable:
             glViewport (0, 0, self.allocation.width, self.allocation.height / self.rows)
             for plugin, mod in self.plugins:
                 if plugin.interval < 0: # static content, only rendered when invalidated
                     continue
-                
+
+                frac = 1.0 / plugin.interval
+
+                if t - plugin._last_render < frac:
+                    continue
+
                 try:
                     with plugin:
                         plugin.render()
+                    plugin._last_render = t
                 except:
                     traceback.print_exc()
 
