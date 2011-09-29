@@ -33,6 +33,7 @@ class Graph(Plugin, PluginUI):
         self.n_samples = 100
         self.pos = 0
         self._range_x = (-100,0)
+        self._range_y = [-100, 100]
         self.offset = None
 
     @attribute(type=str)
@@ -52,7 +53,7 @@ class Graph(Plugin, PluginUI):
 
     @attribute(type=str)
     def range_y(self, value):
-        pass
+        self._range_y = tuple([float(x) for x in value.split(':')])
 
     @attribute(type=int)
     def samples(self, value):
@@ -89,16 +90,30 @@ class Graph(Plugin, PluginUI):
         cr.translate(5, 5)
         self.text(cr, "<u>%s</u>" % self._title, self.font_a)
 
+        cr.translate(0, 25)
+        cr.rectangle(0, 0, self.size[0]-10, self.size[1]-35);
+        cr.set_source_rgba(1,1,1,1)
+        cr.fill()
+        cr.save()
+        cr.rectangle(0, 0, self.size[0]-10, self.size[1]-35);
+        cr.set_line_width(1.0)
+        cr.set_source_rgba(0,0,0,1)
+        cr.stroke()
+        cr.restore()
+
+        cr.set_source_rgba(0,0,0,1)
         w = float(self.size[0]) / (self.n_samples-1)
+        yoffset = self._range_y[1]
+        yscale = float(self.size[1]) / (self._range_y[1] - self._range_y[0])
         n = 0
         c = (self.pos+1) % self.n_samples
-        cr.move_to(n, self.data[c]+25)
+        cr.move_to(n, (self.data[c]+yoffset)*yscale)
         while True:
             n += w
             c = (c+1)%self.n_samples
             if c == self.pos: break
 
-            cr.line_to(n, self.data[c]+25)
+            cr.line_to(n, (self.data[c]+yoffset)*yscale)
         cr.stroke()
 
         cr.restore()
