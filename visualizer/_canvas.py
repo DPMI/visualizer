@@ -84,7 +84,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect('configure_event', self.configure)
         self.connect('expose_event',    self.expose)
         #self.connect_after('destroy', self.destroy)
-        gobject.timeout_add(1000/60, self.expire)
+        gobject.timeout_add(1000/50, self.expire)
         gobject.timeout_add(transition_time * 1000, self.transition)
 
         # setup consumer library
@@ -105,7 +105,11 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             raise IOError, 'No such plugin: %s' % name
         try:
             mod = imp.load_module('_vis__%s' % name, *info)
-            plugin = mod.factory(**kwargs)
+            try:
+                plugin = mod.factory(**kwargs)
+            except:
+                traceback.print_exc()
+                return
             print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(plugin)
 
             req = getattr(plugin, 'dataset', [])

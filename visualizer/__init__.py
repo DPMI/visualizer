@@ -88,24 +88,28 @@ class Main:
 
         self.n = 0
         def foo(self, *args):
-            timeout = 0.1
-            if self.visualizer.transition_enabled:
-                timeout = 0
-
             try:
-                rl,wl,xl = select(self.consumers,[],[],timeout)
-            except Exception, e:
-                if e.args[0] == errno.EINTR:
-                    # reloading?
-                    return True
-                raise
+                timeout = 0.1
+                if self.visualizer.transition_enabled:
+                    timeout = 0
 
-            for con in rl:
-                con.pull()
+                try:
+                    rl,wl,xl = select(self.consumers,[],[],timeout)
+                except Exception, e:
+                    if e.args[0] == errno.EINTR:
+                        # reloading?
+                        return True
+                    raise
 
-            return True
-
-        gobject.idle_add(foo, self)
+                for con in rl:
+                    try:
+                        con.pull()
+                    except:
+                        traceback.print_exc()
+            except:
+                traceback.print_exc()
+            finally:
+                return True
 
         # cursor
         pix = gtk.gdk.Pixmap(None, 1, 1, 1)
@@ -155,6 +159,9 @@ class Main:
             self.visualizer.window.set_cursor(self.cursor)
 
         signal.signal(signal.SIGHUP, self.reload)
+
+        gobject.idle_add(foo, self)
+
 
     def reload(self, signum, frame):
         print 'herp derp, should reload config...'
