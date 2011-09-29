@@ -112,6 +112,13 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             for ds in req:
                 if not ds in self.dataset:
                     raise RuntimeError, 'Plugin "%s" requires dataset "%s" which is not available' % (name, ds)
+                func = plugin.on_data
+                try:
+                    self.dataset[ds].subscribe(ds, func)
+                except Exception, e:
+                    traceback.print_exc()
+                    raise RuntimeError, 'Plugin "%s" requires dataset "%s" but consumer refused subscription: %s' % (name, ds, str(e))
+
             #try:
             #    plugin.background('ff00ff')
             #except:

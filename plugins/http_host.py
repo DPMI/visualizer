@@ -3,7 +3,7 @@
 from visualizer.plugin import Plugin, attribute, PluginUI
 import math
 import traceback
-import sqlite3
+import json
 from socket import ntohs, ntohl
 from OpenGL.GL import *
 
@@ -22,30 +22,15 @@ class HTTPHost(Plugin, PluginUI):
         
         self.font_a = PluginUI.create_font(self.cr, size=16)
         self.font_b = PluginUI.create_font(self.cr, size=12)
-        self.hosts = sqlite3.connect(':memory:')
-        self.hosts.execute("CREATE TABLE hosts (host TEXT PRIMARY KEY, hit INT default 1)")
-        self.tmp = []
+        self.hosts = []
 
     def on_resize(self, size):
         Plugin.on_resize(self, size)
         PluginUI.on_resize(self, size)
     
-    def on_packet(self, stream, pkt):
-        if not pkt.tcphdr or \
-           ntohs(pkt.tcphdr.dest) != 80 or\
-           len(pkt.payload) == 0:
-            return
-
-        raw = str(pkt.payload)
-        if raw[:3] != 'GET': # only handle GET
-            return
-
-        lines = raw.splitlines()[1:] # ignore request
-        headers = dict([tuple(x.split(': ',1)) for x in lines if ':' in x])
-
-        if 'Host' in headers:
-            host = headers['Host']
-            self.tmp.append(host)
+    def on_data(self, ds, data):
+        assert ds == 'http_hostname'
+        self.hosts = json.loads(data)
 
     # cairo
     def do_render(self):
@@ -56,18 +41,7 @@ class HTTPHost(Plugin, PluginUI):
         cr.translate(5,5)
         self.text(cr, "<u>Top HTTP hostnames</u>", self.font_a)
 
-
-        # fulhack!
-        if len(self.tmp) > 0:
-            cur = self.hosts.cursor()
-            for host in self.tmp:
-                cur.execute('UPDATE hosts SET hit = hit+1 WHERE host = ?', (host,))
-                if cur.rowcount == 0:
-                    cur.execute('INSERT INTO hosts (host) VALUES (?)', (host,))
-            self.tmp = []
-
-        
-        for host, hits in self.hosts.execute('SELECT host, hit FROM hosts ORDER BY hit DESC LIMIT 10').fetchall():
+        for host, hits in self.hosts:
             cr.translate(0,25)
             self.text(cr, "%s (%d hits)" % (host, hits), self.font_b)
 

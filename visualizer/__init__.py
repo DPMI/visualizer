@@ -9,6 +9,7 @@ from os.path import dirname, join
 import re
 import traceback
 import time
+from select import select
 
 import consumer
 from _canvas import Canvas
@@ -84,9 +85,15 @@ class Main:
 
         self.n = 0
         def foo(self, *args):
-            print args, self.n
-            self.n += 1
-            time.sleep(0.1)
+            timeout = 0.1
+            if self.visualizer.transition_enabled:
+                timeout = 0
+
+            rl,wl,xl = select(self.consumers,[],[],timeout)
+            
+            for con in rl:
+                con.pull()
+
             return True
 
         gobject.idle_add(foo, self)
