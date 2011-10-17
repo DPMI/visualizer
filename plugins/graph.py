@@ -40,6 +40,10 @@ class Graph(Plugin, PluginUI):
         self.offset = None
         self._xtitle= 'Default [s]'
         self._ytitle=' Default [unit]'
+        self.auto = False
+
+        # chart margins
+        self.margin = [30, 5, 5, 30] # top right bottom left
 
     @attribute(type=str)
     def source(self, value):
@@ -62,7 +66,7 @@ class Graph(Plugin, PluginUI):
     @attribute(type=str)
     def range_x(self, value):
         self._range_x = tuple([float(x) for x in value.split(':')])
-        self.interval = 1.0 / (float(abs(self._range_x[0])) / self.n_samples)
+        self.interval = 1.0 / (float(abs(self._range_x[0])) / (self.n_samples-2))
 
     @attribute(type=str)
     def range_y(self, value):
@@ -70,13 +74,17 @@ class Graph(Plugin, PluginUI):
 
     @attribute(type=int)
     def samples(self, value):
+        if value == 'auto':
+            self.auto = True
+            value = (self.size[0] - self.margin[1] - self.margin[3]) / 4
         self.data = numpy.array([0]*int(value), numpy.float)
         self.n_samples = int(value)
-        self.interval = 1.0 / (float(abs(self._range_x[0])) / self.n_samples)
+        self.interval = 1.0 / (float(abs(self._range_x[0])) / (self.n_samples-2))
 
     def normalize(self, value):
         yoffset = self._range_y[1]
-        yscale = float(self.size[1]) / (self._range_y[1] - self._range_y[0])
+        height = self.size[1] - self.margin[0] - self.margin[1]
+        yscale = float(height) / (self._range_y[1] - self._range_y[0])
         return (value + yoffset) * yscale
 
     def on_data(self, dataset, raw):
@@ -87,9 +95,7 @@ class Graph(Plugin, PluginUI):
                 self.offset = x
                 self.iteration = 1
             elif x - self.offset > delta:
-                print self.data[self.pos]
                 self.data[self.pos] = self.normalize(self.data[self.pos])
-                print self.data[self.pos]
                 
                 self.pos += 1
                 self.pos %= self.n_samples
@@ -111,12 +117,15 @@ class Graph(Plugin, PluginUI):
 
     def render_chart(self):
         cr = self.cr
+        w = self.size[0] - self.margin[1] - self.margin[3]
+        h = self.size[1] - self.margin[0] - self.margin[2]
+        
         cr.save()
-        cr.translate(5, 30)
-        cr.rectangle(0, 0, self.size[0]-10, self.size[1]-35);
+        cr.translate(self.margin[3], self.margin[0])
+        cr.rectangle(0, 0, w, h);
         cr.set_source_rgba(1,1,1,1)
         cr.fill()
-        cr.rectangle(0, 0, self.size[0]-10, self.size[1]-35);
+        cr.rectangle(0, 0, w, h);
         cr.set_line_width(1.0)
         cr.set_source_rgba(0,0,0,1)
         cr.stroke()
@@ -140,17 +149,17 @@ class Graph(Plugin, PluginUI):
         cr = self.cr
         
         cr.save()
-        cr.translate(5,30)
+        cr.translate(0, self.margin[0])
         cr.set_antialias(cairo.ANTIALIAS_NONE)
         cr.set_source_rgba(0,0,0,1)
-        w = float(self.size[0]) / (self.n_samples-1)
-        #yoffset = self._range_y[1]
-        #yscale = float(self.size[1]) / (self._range_y[1] - self._range_y[0])
-        n = 0
+
+        w = self.size[0] - self.margin[1] - self.margin[3]
+        dx = float(w) / (self.n_samples-2) # -1 because, and -1 because the latest sample isn't finished yet
+        n = self.margin[3]
         c = (self.pos+1) % self.n_samples
         cr.move_to(n, self.data[c])
         while True:
-            n += w
+            n += dx
             c = (c+1)%self.n_samples
             if c == self.pos: break
 
@@ -171,6 +180,8 @@ class Graph(Plugin, PluginUI):
 
     def on_resize(self, size):
         PluginUI.on_resize(self, size)
+        if self.auto:
+            self.samples('auto')
 
     # plugin
     def render(self):
