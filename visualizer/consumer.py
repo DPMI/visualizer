@@ -36,6 +36,8 @@ class Consumer(object):
     def pull(self):
         header = struct.Struct('!I64s')
         raw = self.sock.recv(header.size)
+#        print "HERE\n", [raw],"\nTHERE"
+
         size, name = header.unpack(raw)
         name = name.rstrip('\x00')
         data = self.sock.recv(size)

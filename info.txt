@@ -1,10 +1,4 @@
-<big><b>Network Performance Lab</b></big>
-
 <big><b>Distributed Passive Measurement Infrastructure</b></big>
-<b>Introduction</b>
 Having access to relevant and up-to-date measurement data is a key issue for network analysis in order to allow for efficient Internet performance monitoring, evaluation and management. New applications keep appearing; user and protocol behavior keep evolving; traffic mixes and characteristics are continuously changing, which implies that traffic traces may have a short span of relevance and new traces have to be collected quite regularly.
 
-In order to give a holistic view of what is going on in the network, passive measurements have to be carried out at different places simultaneously. On this background, this paper proposes a passive measurement infrastructure, consisting of coordinated measurement points, arranged in measurement areas.
-This structure allows for a efficient use of passive monitoring equipment in order to supply researchers and network managers with up-to-date and relevant data. The infrastructure is generic with regards to the capturing equipment, ranging from simple PCAP-based devices to high-end DAG cards and dedicated ASICs, in order to promote a large-scale deployment of measurement points.
-
-<b>Detta är för mycket text...</b>
+The DPMI was designed from two main aspects; sharing of network/equipment access and ease of use. A key aspect in measurements is access to networks, as the DPMI does network sharing, no user can restrict access to a link that is connected to the DPMI. That is, if you are allowed to measure, you can measue, irrespectively if someone else is doing it all ready. This increases the utilization of measurement equipment, and also allows for multiple views on the same data. The ease of use, is handled by having a simple web GUI for configuration of the system. 

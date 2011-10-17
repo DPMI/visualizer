@@ -7,6 +7,8 @@ from OpenGL.GL import *
 from visualizer.picotime import picotime
 import sys
 import numpy
+import pango
+import math
 
 def csv_filter(value):
     for line in value.splitlines():
@@ -35,6 +37,8 @@ class Graph(Plugin, PluginUI):
         self._range_x = (-100,0)
         self._range_y = [-100, 100]
         self.offset = None
+        self._xtitle= 'Default [s]'
+        self._ytitle=' Default [unit]'
 
     @attribute(type=str)
     def source(self, value):
@@ -45,6 +49,14 @@ class Graph(Plugin, PluginUI):
     @attribute(type=str)
     def title(self, value):
         self._title = value
+
+    @attribute(type=str)
+    def xtitle(self, value):
+        self._xtitle = value
+
+    @attribute(type=str)
+    def ytitle(self, value):
+        self._ytitle = value
 
     @attribute(type=str)
     def range_x(self, value):
@@ -90,6 +102,7 @@ class Graph(Plugin, PluginUI):
         cr.translate(5, 5)
         self.text(cr, "<u>%s</u>" % self._title, self.font_a)
 
+
         cr.translate(0, 25)
         cr.rectangle(0, 0, self.size[0]-10, self.size[1]-35);
         cr.set_source_rgba(1,1,1,1)
@@ -100,6 +113,21 @@ class Graph(Plugin, PluginUI):
         cr.set_source_rgba(0,0,0,1)
         cr.stroke()
         cr.restore()
+
+        cr.save()
+        cr.translate(-5+self.size[0]-175, -25+self.size[1]-30)
+        self.text(cr, self._xtitle, self.font_a,alignment=pango.ALIGN_RIGHT,width=165)
+        cr.restore()
+        cr.restore()
+
+        cr.save()
+        cr.rotate(math.pi/2)
+        cr.translate(0, -30)
+        self.text(cr, self._ytitle, self.font_a,alignment=pango.ALIGN_RIGHT,width=165)
+        cr.restore()
+
+        cr.save()
+        cr.translate(5,30)
 
         cr.set_source_rgba(0,0,0,1)
         w = float(self.size[0]) / (self.n_samples-1)
