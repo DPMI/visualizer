@@ -5,18 +5,32 @@ from email.parser import FeedParser
 import httplib
 import traceback
 import struct
+import time
 
 class Consumer(object):
     def __init__(self, host, port):
         self.peer = (host,port)
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((host, port))
+        self.connect()
         self.callback = {}
     
         payload = self.get('/info').get_payload()
         info = json.loads(payload)
         
         self.dataset = info['dataset']
+        self.subscriptions = set()
+        self._stamp = 0
+
+    def connect(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect(self.peer)
+
+    def reconnect(self):
+        if time.time() - self._stamp < 60:
+            return
+        self._stamp = time.time()
+        self.connect()
+        for x in self.subscriptions:
+            self.subscribe(x, None)
 
     def get(self, path):
         headers = {
@@ -30,14 +44,19 @@ class Consumer(object):
             'Accept': 'application/json',
             'Host': self.peer[0]
         }
-        self.callback[dataset] = self.callback.get(dataset,[]) + [callback]
-        return self.request('SUBSCRIBE /dataset/%s HTTP/1.1' % dataset, headers)
+        if callback is not None:
+            self.callback[dataset] = self.callback.get(dataset,[]) + [callback]
+        result = self.request('SUBSCRIBE /dataset/%s HTTP/1.1' % dataset, headers)
+        self.subscriptions.add(dataset)
+        return result
 
     def pull(self):
         header = struct.Struct('!I64s')
         raw = self.sock.recv(header.size)
-#        print "HERE\n", [raw],"\nTHERE"
 
+        if raw == '':
+            raise socket.error, 'socket shutdown'
+        
         size, name = header.unpack(raw)
         name = name.rstrip('\x00')
         data = self.sock.recv(size)

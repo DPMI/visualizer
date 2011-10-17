@@ -12,6 +12,7 @@ import time
 from select import select
 import signal
 import errno
+import socket
 
 import consumer
 from _canvas import Canvas
@@ -94,18 +95,27 @@ class Main:
                     timeout = 0
 
                 try:
-                    rl,wl,xl = select(self.consumers,[],[],timeout)
+                    rl,wl,xl = select([x for x in self.consumers if x.sock is not None],[],[],timeout)
                 except Exception, e:
                     if e.args[0] == errno.EINTR:
                         # reloading?
                         return True
                     raise
 
+                # pull data from connected consumers
                 for con in rl:
                     try:
                         con.pull()
+                    except socket.error:
+                        traceback.print_exc()
+                        con.sock = None
                     except:
                         traceback.print_exc()
+
+                # try to reconnect disconnected consumers
+                for con in [x for x in self.consumers if x.sock is None]:
+                    con.reconnect()
+
             except:
                 traceback.print_exc()
             finally:
