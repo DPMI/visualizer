@@ -30,6 +30,7 @@ class Graph(Plugin, PluginUI):
         self.content = '<b>Lorem</b> ipsum dot sit amet'
         self.font_a = PluginUI.create_font(self.cr, size=16)
         self.font_b = PluginUI.create_font(self.cr, size=12)
+        self.font_label = PluginUI.create_font(self.cr, size=10)
         self.dataset = []
         self.filter = {}
         self.data = numpy.array([0]*100, numpy.float)
@@ -43,7 +44,7 @@ class Graph(Plugin, PluginUI):
         self.auto = False
 
         # chart margins
-        self.margin = [30, 5, 5, 30] # top right bottom left
+        self.margin = [30, 5, 20, 30] # top right bottom left
 
     @attribute(type=str)
     def source(self, value):
@@ -80,6 +81,7 @@ class Graph(Plugin, PluginUI):
         self.data = numpy.array([0]*int(value), numpy.float)
         self.n_samples = int(value)
         self.interval = 1.0 / (float(abs(self._range_x[0])) / (self.n_samples-2))
+        self.pos = 0
 
     def normalize(self, value):
         yoffset = self._range_y[1]
@@ -90,22 +92,31 @@ class Graph(Plugin, PluginUI):
     def on_data(self, dataset, raw):
         delta = float(abs(self._range_x[0])) / self.n_samples
         flt = self.filter[dataset]
-        for x,y in flt(raw):
-            if not self.offset:
-                self.offset = x
+        for timestamp, value in flt(raw):
+            if not self.offset: # first run
+                self.offset = timestamp
                 self.iteration = 1
-            elif x - self.offset > delta:
+            elif timestamp - self.offset > delta: # accumulated enough points
                 self.data[self.pos] = self.normalize(self.data[self.pos])
-                
-                self.pos += 1
-                self.pos %= self.n_samples
-                self.iteration = 1
-                self.data[self.pos]
-                self.offset += delta
-            #print x,y,delta,self.offset,self.pos,self.iteration
+
+                # this loop is needed if the samplerate is higher than the
+                # rate the consumer provides data.
+                n = math.floor((timestamp - self.offset) / delta)
+
+                while n > 0:
+                    prev = self.data[self.pos]
+                    self.pos += 1
+                    self.pos %= self.n_samples
+                    self.iteration = 1
+                    if n == 1:
+                        self.data[self.pos] = 0
+                    else:
+                        self.data[self.pos] = prev
+                    self.offset += delta
+                    n -= 1
             
             prev = self.data[self.pos]
-            tmp = ((y-prev)/(self.iteration))+prev # inc. avg.
+            tmp = ((value-prev)/(self.iteration))+prev # inc. avg.
             self.iteration += 1
             self.data[self.pos] = tmp
 
@@ -133,16 +144,21 @@ class Graph(Plugin, PluginUI):
 
     def render_labels(self):
         cr = self.cr
-        
+
+        width  = self.size[0] - self.margin[1] - self.margin[3]
+        height = self.size[1] - self.margin[0] - self.margin[1]
+
+        # horizontal
         cr.save()
-        cr.translate(-5+self.size[0]-175, -25+self.size[1]-30)
-        self.text(self._xtitle, self.font_a,alignment=pango.ALIGN_RIGHT,width=165)
+        cr.translate(self.margin[3], self.size[1]-15)
+        self.text(self._xtitle, self.font_label, alignment=pango.ALIGN_CENTER, width=width)
         cr.restore()
 
+        # vertical
         cr.save()
         cr.rotate(math.pi/2)
-        cr.translate(0, -30)
-        self.text(self._ytitle, self.font_a,alignment=pango.ALIGN_RIGHT,width=165)
+        cr.translate(20, -25)
+        self.text(self._ytitle, self.font_label, alignment=pango.ALIGN_CENTER, width=height)
         cr.restore()
 
     def render_graph(self):
@@ -150,7 +166,6 @@ class Graph(Plugin, PluginUI):
         
         cr.save()
         cr.translate(0, self.margin[0])
-        cr.set_antialias(cairo.ANTIALIAS_NONE)
         cr.set_source_rgba(0,0,0,1)
 
         w = self.size[0] - self.margin[1] - self.margin[3]
@@ -182,6 +197,8 @@ class Graph(Plugin, PluginUI):
         PluginUI.on_resize(self, size)
         if self.auto:
             self.samples('auto')
+        elif self.n_samples > size[0]:
+            print >> sys.stderr, 'Warning: graph samplerate (%d) is greater than horizontal resolution (%d), it is a waste of CPU and GPU and yields subpar rendering (i.e moire patterns). Either lower the samplerate or preferably use "auto".' % (self.n_samples, size[0])
 
     # plugin
     def render(self):
