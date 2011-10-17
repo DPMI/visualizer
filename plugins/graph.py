@@ -7,6 +7,7 @@ from OpenGL.GL import *
 from visualizer.picotime import picotime
 import sys
 import numpy
+import cairo
 import pango
 import math
 
@@ -73,6 +74,11 @@ class Graph(Plugin, PluginUI):
         self.n_samples = int(value)
         self.interval = 1.0 / (float(abs(self._range_x[0])) / self.n_samples)
 
+    def normalize(self, value):
+        yoffset = self._range_y[1]
+        yscale = float(self.size[1]) / (self._range_y[1] - self._range_y[0])
+        return (value + yoffset) * yscale
+
     def on_data(self, dataset, raw):
         delta = float(abs(self._range_x[0])) / self.n_samples
         flt = self.filter[dataset]
@@ -81,6 +87,10 @@ class Graph(Plugin, PluginUI):
                 self.offset = x
                 self.iteration = 1
             elif x - self.offset > delta:
+                print self.data[self.pos]
+                self.data[self.pos] = self.normalize(self.data[self.pos])
+                print self.data[self.pos]
+                
                 self.pos += 1
                 self.pos %= self.n_samples
                 self.iteration = 1
@@ -93,58 +103,71 @@ class Graph(Plugin, PluginUI):
             self.iteration += 1
             self.data[self.pos] = tmp
 
-    # cairo
-    def do_render(self):
+    def render_title(self):
+        self.cr.save()
+        self.cr.translate(5, 5)
+        self.text("<u>%s</u>" % self._title, self.font_a)
+        self.cr.restore()
+
+    def render_chart(self):
         cr = self.cr
         cr.save()
-
-        self.clear(cr, (0.95, 0.95, 1.0, 1.0))
-        cr.translate(5, 5)
-        self.text(cr, "<u>%s</u>" % self._title, self.font_a)
-
-
-        cr.translate(0, 25)
+        cr.translate(5, 30)
         cr.rectangle(0, 0, self.size[0]-10, self.size[1]-35);
         cr.set_source_rgba(1,1,1,1)
         cr.fill()
-        cr.save()
         cr.rectangle(0, 0, self.size[0]-10, self.size[1]-35);
         cr.set_line_width(1.0)
         cr.set_source_rgba(0,0,0,1)
         cr.stroke()
         cr.restore()
 
+    def render_labels(self):
+        cr = self.cr
+        
         cr.save()
         cr.translate(-5+self.size[0]-175, -25+self.size[1]-30)
-        self.text(cr, self._xtitle, self.font_a,alignment=pango.ALIGN_RIGHT,width=165)
-        cr.restore()
+        self.text(self._xtitle, self.font_a,alignment=pango.ALIGN_RIGHT,width=165)
         cr.restore()
 
         cr.save()
         cr.rotate(math.pi/2)
         cr.translate(0, -30)
-        self.text(cr, self._ytitle, self.font_a,alignment=pango.ALIGN_RIGHT,width=165)
+        self.text(self._ytitle, self.font_a,alignment=pango.ALIGN_RIGHT,width=165)
         cr.restore()
 
+    def render_graph(self):
+        cr = self.cr
+        
         cr.save()
         cr.translate(5,30)
-
+        cr.set_antialias(cairo.ANTIALIAS_NONE)
         cr.set_source_rgba(0,0,0,1)
         w = float(self.size[0]) / (self.n_samples-1)
-        yoffset = self._range_y[1]
-        yscale = float(self.size[1]) / (self._range_y[1] - self._range_y[0])
+        #yoffset = self._range_y[1]
+        #yscale = float(self.size[1]) / (self._range_y[1] - self._range_y[0])
         n = 0
         c = (self.pos+1) % self.n_samples
-        cr.move_to(n, (self.data[c]+yoffset)*yscale)
+        cr.move_to(n, self.data[c])
         while True:
             n += w
             c = (c+1)%self.n_samples
             if c == self.pos: break
 
-            cr.line_to(n, (self.data[c]+yoffset)*yscale)
+            cr.line_to(n, self.data[c])
         cr.stroke()
 
         cr.restore()
+
+    # cairo
+    def do_render(self):
+        cr = self.cr
+
+        self.clear((0.95, 0.95, 1.0, 1.0))
+        self.render_title()
+        self.render_chart()
+        self.render_labels()
+        self.render_graph()
 
     def on_resize(self, size):
         PluginUI.on_resize(self, size)

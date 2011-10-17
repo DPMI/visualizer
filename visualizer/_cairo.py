@@ -93,17 +93,17 @@ class CairoWidget:
 		if raw is None:
 			raw = '%s %f' % (font, size)
 		return pango.FontDescription(raw)
-	
-	@classmethod
-	def clear(cls, cr, color=(0,0,0,0)):
+
+	def clear(self, color=(0,0,0,0)):
+		cr = self.cr
 		cr.save()
 		cr.set_source_rgba(*color)
 		cr.set_operator(cairo.OPERATOR_SOURCE)
 		cr.paint()
 		cr.restore()
 	
-	@classmethod
-	def text(cls, cr, text, font, color=(0,0,0,1), alignment=pango.ALIGN_LEFT, justify=False, width=None):
+	def text(self, text, font, color=(0,0,0,1), alignment=pango.ALIGN_LEFT, justify=False, width=None):
+		cr = self.cr
 		cr.set_source_rgba(*color)
 		
 		ctx = pangocairo.CairoContext(cr)

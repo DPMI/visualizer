@@ -31,9 +31,9 @@ class StaticContent(Plugin, PluginUI):
 
     # cairo
     def do_render(self):
-        self.clear(self.cr, (0.95, 0.95, 1.0, 1.0))
+        self.clear((0.95, 0.95, 1.0, 1.0))
         self.cr.translate(10,5)
-        self.text(self.cr, self.content, self.font, justify=True, width=self.width-20)
+        self.text(self.content, self.font, justify=True, width=self.width-20)
 
     def on_resize(self, size):
         PluginUI.on_resize(self, size)
