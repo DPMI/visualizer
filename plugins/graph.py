@@ -42,6 +42,8 @@ class Graph(Plugin, PluginUI):
         self._xtitle= 'Default [s]'
         self._ytitle=' Default [unit]'
         self.auto = False
+        self._xlines = []
+        self._ylines = []
 
         # chart margins
         self.margin = [30, 5, 20, 30] # top right bottom left
@@ -73,6 +75,14 @@ class Graph(Plugin, PluginUI):
     def range_y(self, value):
         self._range_y = tuple([float(x) for x in value.split(':')])
 
+    @attribute(type=str)
+    def xlines(self, value):
+        self._xlines = [float(x) for x in value.split(';')]
+
+    @attribute(type=str)
+    def ylines(self, value):
+        self._ylines = [float(x) for x in value.split(';')]
+
     @attribute(type=int)
     def samples(self, value):
         if value == 'auto':
@@ -85,7 +95,7 @@ class Graph(Plugin, PluginUI):
 
     def normalize(self, value):
         yoffset = self._range_y[1]
-        height = self.size[1] - self.margin[0] - self.margin[1]
+        height = self.size[1] - self.margin[0] - self.margin[2]
         yscale = float(height) / (self._range_y[1] - self._range_y[0])
         return (value + yoffset) * yscale
 
@@ -130,7 +140,8 @@ class Graph(Plugin, PluginUI):
         cr = self.cr
         w = self.size[0] - self.margin[1] - self.margin[3]
         h = self.size[1] - self.margin[0] - self.margin[2]
-        
+
+        # background
         cr.save()
         cr.translate(self.margin[3], self.margin[0])
         cr.rectangle(0, 0, w, h);
@@ -140,6 +151,36 @@ class Graph(Plugin, PluginUI):
         cr.set_line_width(1.0)
         cr.set_source_rgba(0,0,0,1)
         cr.stroke()
+        cr.restore()
+
+        # before any data has arrived
+        if self.offset is None: return
+
+        # lines
+        cr.save()
+        cr.set_source_rgba(0.5,0.5,0.5,1)
+        cr.set_line_width(1.0)
+        cr.save()
+        width  = self.size[0] - self.margin[1] - self.margin[3]
+        height = self.size[1] - self.margin[0] - self.margin[2]
+        xscale = float(width) / abs(self._range_x[0])
+        yscale = float(height) / (self._range_y[1] - self._range_y[0])
+        cr.translate(self.margin[3], self.margin[0] + height * 0.5)
+        for tick in self._ylines:
+            cr.move_to(0, tick * yscale)
+            cr.line_to(w, tick * yscale)
+            cr.stroke()
+        cr.restore()
+        cr.save()
+        cr.translate(self.margin[3] + width, self.margin[0])
+        for tick in self._xlines:
+            x = -(self.offset % tick) * xscale
+            while x > -width:
+                cr.move_to(x, 0)
+                cr.line_to(x, height)
+                cr.stroke()
+                x -= tick * xscale
+        cr.restore()
         cr.restore()
 
     def render_labels(self):
