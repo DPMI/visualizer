@@ -9,7 +9,7 @@ from OpenGL.GL import *
 
 class TOPstream(Plugin, PluginUI):
     name = 'NPL Top Stream  plugin'
-    author = ('David Sveningsson', 'dsv@bth.se')
+    author = ('David Sveningsson, Patrik Arlos', 'dsv@bth.se,pal@bth.se')
     date = '2011-06-08'
     version = 0
     api = 1
@@ -36,14 +36,14 @@ class TOPstream(Plugin, PluginUI):
     def do_render(self):
         cr = self.cr
         cr.save()
-        self.clear(self.cr, (0.95, 0.95, 1.0, 1.0))
+        self.clear((0.95, 0.95, 1.0, 1.0))
 
         cr.translate(5,5)
-        self.text(cr, "<u>Top HTTP hostnames</u>", self.font_a)
+        self.text( "<u>Top Streams </u>", self.font_a)
 
         for host, hits in self.hosts:
             cr.translate(0,25)
-            self.text(cr, "%s (%d hits)" % (host, hits), self.font_b)
+            self.text("%s (%d hits)" % (host, hits), self.font_b)
 
         cr.restore()
 

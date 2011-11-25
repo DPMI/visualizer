@@ -34,7 +34,7 @@ class StaticContent(Plugin, PluginUI):
 
     # cairo
     def do_render(self):
-        self.clear(self.cr, (0.95, 0.95, 1.0, 1.0))
+        self.clear((0.95, 0.95, 1.0, 1.0))
         self.imgscale=0.75*self.size[0]/self.imgw
         self.imgxpos=(self.size[0]-self.imgw*self.imgscale)*0.5
 #        print self.imgxpos
