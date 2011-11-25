@@ -1,3 +1,4 @@
+import sys
 import socket
 import json
 from email.message import Message
@@ -28,6 +29,7 @@ class Consumer(object):
         if time.time() - self._stamp < 60:
             return
         self._stamp = time.time()
+        print >> sys.stderr, 'Reconnecting to %s:%d' % self.peer
         self.connect()
         for x in self.subscriptions:
             self.subscribe(x, None)
