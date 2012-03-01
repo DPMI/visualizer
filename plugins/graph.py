@@ -94,11 +94,19 @@ class Graph(Plugin, PluginUI):
         self.pos = 0
 
     def normalize(self, value):
-        yoffset = self._range_y[1]
-        height = self.size[1] - self.margin[0] - self.margin[2]
-        yscale = float(height) / (self._range_y[1] - self._range_y[0])
-        return (value + yoffset) * yscale
+        # range (in units)
+        lower = self._range_y[0]
+        upper = self._range_y[1]
+        span = upper - lower
+        
+        # calculate where in the range value lies
+        s = (value - lower) / span
 
+        # height (in pixels)
+        height = self.size[1] - self.margin[0] - self.margin[2]
+
+        return height - (height * s)
+    
     def on_data(self, dataset, raw):
         delta = float(abs(self._range_x[0])) / self.n_samples
         flt = self.filter[dataset]
