@@ -267,5 +267,8 @@ class Graph(Plugin, PluginUI):
 def factory(**kwargs):
     item = Graph()
     for key, value in kwargs.items():
-        getattr(item, key)(value)
+        try:
+            getattr(item, key)(value)
+        except:
+            traceback.print_exc()
     return item
