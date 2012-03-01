@@ -21,7 +21,7 @@ class Graph(Plugin, PluginUI):
     date = '2011-09-29'
     version = 0
     api = 1
-    interval = 10
+    interval = 1
 
     def __init__(self):
         Plugin.__init__(self)
@@ -69,7 +69,6 @@ class Graph(Plugin, PluginUI):
     @attribute(type=str)
     def range_x(self, value):
         self._range_x = tuple([float(x) for x in value.split(':')])
-        self.interval = 1.0 / (float(abs(self._range_x[0])) / (self.n_samples-2))
 
     @attribute(type=str)
     def range_y(self, value):
@@ -90,8 +89,11 @@ class Graph(Plugin, PluginUI):
             value = (self.size[0] - self.margin[1] - self.margin[3]) / 4
         self.data = numpy.array([0]*int(value), numpy.float)
         self.n_samples = int(value)
-        self.interval = 1.0 / (float(abs(self._range_x[0])) / (self.n_samples-2))
         self.pos = 0
+
+    @attribute(type=int)
+    def frequency(self, value):
+        self.interval = float(value)
 
     def normalize(self, value):
         # range (in units)
