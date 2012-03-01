@@ -93,7 +93,9 @@ class Graph(Plugin, PluginUI):
 
     @attribute(type=int)
     def frequency(self, value):
-        self.interval = float(value)
+        value = float(value)
+        if value <= 0.0: raise ValueError('frequency must be greater than 0')
+        self.interval = value
 
     def normalize(self, value):
         # range (in units)
