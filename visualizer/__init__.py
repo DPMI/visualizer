@@ -13,15 +13,42 @@ from select import select
 import signal
 import errno
 import socket
+from functools import wraps
 
 import consumer
 from _canvas import Canvas
+
+def ConfigParserWrapper(func):
+    @wraps(func)
+    def outer(x):
+        def inner(self, section, option, default=None):
+            try:
+                return func(self, section, option)
+            except configparser.NoOptionError:
+                if default is not None:
+                    return default
+                raise
+        return inner
+    return outer
+
+class ConfigParser(configparser.SafeConfigParser):
+    @ConfigParserWrapper(configparser.SafeConfigParser.get)
+    def get(self): pass
+
+    @ConfigParserWrapper(configparser.SafeConfigParser.getint)
+    def getint(self): pass
+
+    @ConfigParserWrapper(configparser.SafeConfigParser.getfloat)
+    def getfloat(self): pass
+
+    @ConfigParserWrapper(configparser.SafeConfigParser.getboolean)
+    def getboolean(self): pass
 
 class Main:
     cursor_timeout = 2000 # delay in ms until hiding cursor
     transition = 15
 
-    def __init__(self, config_fp):
+    def __init__(self, config):
         builder = gtk.Builder()
         builder.add_from_file(join(dirname(__file__),'main.ui'))
         builder.connect_signals(self)
@@ -42,14 +69,8 @@ class Main:
         gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
 
         # config defaults
-        self.transition = Main.transition
+        self.transition = config.getint('general', 'transition', Main.transition)
         self.consumers = []
-
-        # parse config
-        config = configparser.SafeConfigParser()
-        config.readfp(config_fp)
-        
-        self.transition = config.getint('general', 'transition')
 
         self.fullscreen = False
         try:
@@ -229,16 +250,21 @@ def run():
             sys.exit(1)
         args.config = open('visualizer.conf')
 
-    pidlock = '/var/run/visualizer.lock'
+
+    # parse config
+    config = ConfigParser()
+    config.readfp(args.config)
+
+    pidlock = config.get('general', 'lockfile', '/var/run/visualizer.lock')
     if os.path.exists(pidlock):
         print >> sys.stderr, pidlock, 'exists, if the visualizer isn\'t running manually remove the file before continuing'
         sys.exit(1)
-    
+
     with open(pidlock, 'w') as pid:
         pid.write(str(os.getpid()))
 
     try:
-        main = Main(args.config)
+        main = Main(config)
         gtk.main()
     finally:
         os.unlink(pidlock)
