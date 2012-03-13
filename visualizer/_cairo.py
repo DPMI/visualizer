@@ -29,7 +29,9 @@ class CairoWidget:
 		self._texture = glGenTextures(1);
 		
 		self.cr = cairo.Context(self.surface)
-		
+		self.pango = pangocairo.CairoContext(self.cr)
+		self.layout = self.pango.create_layout()
+        
 		# force subpixel rendering
 		self.font_options = cairo.FontOptions()
 		self.font_options.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
@@ -105,21 +107,19 @@ class CairoWidget:
 	def text(self, text, font, color=(0,0,0,1), alignment=pango.ALIGN_LEFT, justify=False, width=None):
 		cr = self.cr
 		cr.set_source_rgba(*color)
-		
-		ctx = pangocairo.CairoContext(cr)
-		layout = ctx.create_layout()
-		layout.set_font_description(font)
+
+		self.layout.context_changed()
+		self.layout.set_font_description(font)
 		
 		if width:
-			layout.set_width(int(width * pango.SCALE))
+			self.layout.set_width(int(width * pango.SCALE))
 		
-		layout.set_alignment(alignment)
-		layout.set_justify(justify)
-		
-		layout.set_markup(text);
-		ctx.show_layout(layout)
+		self.layout.set_alignment(alignment)
+		self.layout.set_justify(justify)
+		self.layout.set_markup(text);
+		self.pango.show_layout(self.layout)
 
-		return layout.get_pixel_extents()
+		return self.layout.get_pixel_extents()
 
 	def render_piechart(self, segment, graph_title, size, max_rows=None, background=None):
 		cr = self.cr
