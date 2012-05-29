@@ -13,7 +13,7 @@ import math
 
 def csv_filter(value):
     for line in value.splitlines():
-        yield tuple([float(x) for x in line.split(';')])
+        yield tuple([float(x.strip('\x00')) for x in line.split(';')])
 
 class Graph(Plugin, PluginUI):
     name = 'NPL Graph plugin'
