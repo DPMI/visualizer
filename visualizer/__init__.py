@@ -94,20 +94,38 @@ class Main:
             if ns == 'consumer':
                 host = config.get(section, 'host')
                 port = config.getint(section, 'port')
+
+                con = consumer.Consumer(host, port)
+                self.consumers.append(con)
+                
                 try:
-                    self.consumers.append(consumer.Consumer(host, port))
+                    con.connect()
+                except socket.error, e:
+                    if e.errno != 111: # connection refused
+                        traceback.print_exc()
+                        print >> sys.stderr, 'Consumer %s:%d' % (host, port)
                 except:
                     traceback.print_exc()
-                    print >> sys.stderr, 'Consumer', host, port
+                    print >> sys.stderr, 'Consumer %s:%d' % (host, port)
 
+        print 'Available consumers'
+        print '-------------------'
+        for con in self.consumers:
+            print ' *', con
+        print
+        
         # retrieve datasets from consumers
         self.dataset = {}
         for con in self.consumers:
             for ds in con.dataset:
                 self.dataset[ds] = con
 
-        print self.dataset
-
+        print 'Available datasets'
+        print '------------------'
+        for k,v in self.dataset.iteritems():
+            print ' *', k, v
+        print
+        
         self.n = 0
         def foo(self, *args):
             try:

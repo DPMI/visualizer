@@ -11,19 +11,30 @@ import time
 class Consumer(object):
     def __init__(self, host, port):
         self.peer = (host,port)
-        self.connect()
-        self.callback = {}
-    
-        payload = self.get('/info').get_payload()
-        info = json.loads(payload)
-        
-        self.dataset = info['dataset']
+        self.sock = None
+        self.sockerr = None
         self.subscriptions = set()
-        self._stamp = 0
+        self._stamp = time.time()
+        self.callback = {}
+        self.dataset = {}
+
+    def __str__(self):
+        state = self.sock is not None and "connected" or ("disconnected: %s" % self.sockerr)
+        tmp = self.peer + (state,)
+        return '<Consumer %s:%d (%s)>' % tmp
 
     def connect(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect(self.peer)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.connect(self.peer)
+        except socket.error, e:
+            self.sockerr = e.strerror
+            raise
+        self.sock = sock
+            
+        payload = self.get('/info').get_payload()
+        info = json.loads(payload)
+        self.dataset = info['dataset']
 
     def reconnect(self):
         if time.time() - self._stamp < 60:
