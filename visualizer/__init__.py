@@ -10,10 +10,10 @@ import re
 import traceback
 import time
 from select import select
-import signal
 import errno
 import socket
 from functools import wraps
+from signal import signal, SIGUSR1, SIGINT, SIGHUP
 
 import consumer
 from _canvas import Canvas
@@ -63,7 +63,7 @@ class Main:
         self.accel_group = gtk.AccelGroup()
         self.accel_group.connect_by_path("<visualizer>/quit", quit)
         self.window.add_accel_group(self.accel_group)
-        signal.signal(signal.SIGINT, quit)
+        signal(SIGINT, quit)
 
         self.area = builder.get_object('area')
         gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
@@ -207,7 +207,7 @@ class Main:
             self.notebook.set_show_tabs(False)
             self.visualizer.window.set_cursor(self.cursor)
 
-        signal.signal(signal.SIGHUP, self.reload)
+        signal(SIGHUP, self.reload)
 
         gobject.idle_add(foo, self)
 
