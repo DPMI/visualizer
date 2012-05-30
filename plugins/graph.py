@@ -171,17 +171,18 @@ class Graph(Plugin, PluginUI):
 
         # lines
         cr.save()
-        cr.set_source_rgba(0.5,0.5,0.5,1)
-        cr.set_line_width(1.0)
+        cr.set_source_rgba(0,0,0,0.5)
+        cr.set_line_width(0.5)
         cr.save()
         width  = self.size[0] - self.margin[1] - self.margin[3]
         height = self.size[1] - self.margin[0] - self.margin[2]
         xscale = float(width) / abs(self._range_x[0])
-        yscale = float(height) / (self._range_y[1] - self._range_y[0])
-        cr.translate(self.margin[3], self.margin[0] + height * 0.5)
+        yscale = float(h) / (self._range_y[1] - self._range_y[0])
+        cr.identity_matrix()
+        cr.translate(self.margin[3], self.margin[0] + h)
         for tick in self._ylines:
-            cr.move_to(0, tick * yscale)
-            cr.line_to(w, tick * yscale)
+            cr.move_to(0, -tick * yscale)
+            cr.line_to(w, -tick * yscale)
             cr.stroke()
         cr.restore()
         cr.save()
