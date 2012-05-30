@@ -42,7 +42,7 @@ class Graph(Plugin, PluginUI):
         self.offset = None
         self._xtitle= ''
         self._ytitle= ''
-        self.auto = False
+        self.auto = None
         self._xlines = []
         self._ylines = []
 
@@ -101,9 +101,16 @@ class Graph(Plugin, PluginUI):
 
     @attribute(type=int)
     def samples(self, value):
-        if value == 'auto':
-            self.auto = True
-            value = (self.size[0] - self.margin[1] - self.margin[3]) / 4
+        value = value.strip()
+
+        # hack to set a divider
+        p = value.split('/')
+        if p[0].strip() == 'auto':
+            div = 1.0
+            if len(p) >= 2: div = float(p[1])
+            self.auto = div
+            value = (self.size[0] - self.margin[1] - self.margin[3]) / div
+
         self.data = numpy.array([0]*int(value), numpy.float)
         self.n_samples = int(value)
         self.pos = 0
@@ -266,8 +273,8 @@ class Graph(Plugin, PluginUI):
 
     def on_resize(self, size):
         PluginUI.on_resize(self, size)
-        if self.auto:
-            self.samples('auto')
+        if self.auto is not None:
+            self.samples('auto/%f' % self.auto)
         elif self.n_samples > size[0]:
             print >> sys.stderr, 'Warning: graph samplerate (%d) is greater than horizontal resolution (%d), it is a waste of CPU and GPU and yields subpar rendering (i.e moire patterns). Either lower the samplerate or preferably use "auto".' % (self.n_samples, size[0])
 
