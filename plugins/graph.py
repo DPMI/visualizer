@@ -117,10 +117,10 @@ class Graph(PluginCairo):
         # calculate where in the range value lies
         s = (value - lower) / span
 
-        # height (in pixels)
-        height = self.size[1] - self.margin[0] - self.margin[2]
+        # height (in pixels). -2 to fit inside border
+        height = self.size[1] - self.margin[0] - self.margin[2] - 2
 
-        return height - (height * s)
+        return 1+height - (height * s)
 
     def on_data(self, dataset, raw):
         delta = float(abs(self._range_x[0])) / self.n_samples
