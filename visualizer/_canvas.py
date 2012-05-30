@@ -21,7 +21,7 @@ class GLContext:
     def __enter__(self):
         gldrawable = self.widget.get_gl_drawable()
         glcontext = self.widget.get_gl_context()
-        
+
         if not gldrawable.gl_begin(glcontext):
             raise RuntimeError, 'gl_begin failed'
 
@@ -42,7 +42,7 @@ class Consumer(threading.Thread):
 
     def stop(self):
         self.running = False
-    
+
     def run(self):
         while self.running:
             stream, frame = self.consumer.poll(timeout=.5)
@@ -96,7 +96,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     #    self.consumer.add_stream(*args, **kwargs)
 
     def drawable(self):
-        # this could be implemented in this class, but it is harder to understand "with self" 
+        # this could be implemented in this class, but it is harder to understand "with self"
         return GLContext(self)
 
     def add_module(self, name, **kwargs):
@@ -136,7 +136,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def configure(self, widget, event=None):
         with self.drawable():
             glViewport (0, 0, widget.allocation.width, widget.allocation.height);
-        
+
             # setup othogonal projection matrix with (0,0) in the upper left corner and with a size of 1x1
             glLoadIdentity();
             glOrtho(0, 1, 0, 1, -1.0, 1.0);
@@ -161,11 +161,11 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
     #def destroy(self, widget, event=None):
     #    self.consumer.stop()
-    
+
     def expire(self):
         if self.transition_enabled:
             self.transition_action()
-        
+
         self.queue_draw()
         return True
 
@@ -188,10 +188,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
     def expose(self, widget, event=None):
         self.render()
-    
+
     def render(self):
         plugins = self.visible_plugins()
-        
+
         # yes, this is fugly, go make a VBO or something.
         dy = 1.0 / self.rows
         y = 0.0
@@ -229,23 +229,23 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                     glColor(0,0,0,1)
 
                 real_y = y + offset
-                
+
                 glBegin(GL_QUADS)
                 glTexCoord2f(0, 0)
                 glVertex3f(0, real_y, 0)
-                
+
                 glTexCoord2f(0, 1)
                 glVertex3f(0, real_y+dy, 0)
-                
+
                 glTexCoord2f(1, 1)
                 glVertex3f(1, real_y+dy, 0)
-                
+
                 glTexCoord2f(1, 0)
                 glVertex3f(1, real_y, 0)
                 glEnd()
-                
+
                 y += dy
-                
+
             if gldrawable.is_double_buffered():
                 gldrawable.swap_buffers()
             else:
