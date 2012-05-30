@@ -9,7 +9,7 @@ import math
 name = 'NPL Graph plugin'
 author = ('David Sveningsson', 'dsv@bth.se')
 date = '2011-09-29'
-version = 0
+version = 1
 api = 1
 
 def csv_filter(value):
