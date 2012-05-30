@@ -16,6 +16,8 @@ def csv_filter(value):
     for line in value.splitlines():
         yield tuple([float(x.strip('\x00')) for x in line.split(';')])
 
+clamp = lambda v,a,b: min(max(v,a),b)
+
 class Graph(PluginCairo):
     framerate = 1
 
@@ -124,6 +126,9 @@ class Graph(PluginCairo):
         delta = float(abs(self._range_x[0])) / self.n_samples
         flt = self.filter[dataset]
         for timestamp, value in flt(raw):
+            # clamp to y-axis range.
+            value = clamp(value, self._range_y[0], self._range_y[1])
+
             if not self.offset: # first run
                 self.offset = timestamp
                 self.iteration = 1
