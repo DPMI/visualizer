@@ -31,7 +31,7 @@ class Consumer(object):
             self.sockerr = e.strerror
             raise
         self.sock = sock
-            
+
         payload = self.get('/info').get_payload()
         info = json.loads(payload)
         self.dataset = info['dataset']
@@ -69,7 +69,7 @@ class Consumer(object):
 
         if raw == '':
             raise socket.error, 'socket shutdown'
-        
+
         size, name = header.unpack(raw)
         name = name.rstrip('\x00')
         data = self.sock.recv(size)

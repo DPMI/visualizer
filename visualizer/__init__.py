@@ -77,7 +77,7 @@ class Main:
             self.fullscreen = config.getboolean('general', 'fullscreen')
         except:
             pass
-        
+
         # retrieve consumers from config
         pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
         for section in config.sections():
@@ -90,14 +90,14 @@ class Main:
                 ns = key
             else:
                 ns = ns[:-1] # strip trailing ':'
-                
+
             if ns == 'consumer':
                 host = config.get(section, 'host')
                 port = config.getint(section, 'port')
 
                 con = consumer.Consumer(host, port)
                 self.consumers.append(con)
-                
+
                 try:
                     con.connect()
                 except socket.error, e:
@@ -113,7 +113,7 @@ class Main:
         for con in self.consumers:
             print ' *', con
         print
-        
+
         # retrieve datasets from consumers
         self.dataset = {}
         for con in self.consumers:
@@ -125,7 +125,7 @@ class Main:
         for k,v in self.dataset.iteritems():
             print ' *', k, v
         print
-        
+
         self.n = 0
         def foo(self, *args):
             try:
@@ -183,7 +183,7 @@ class Main:
                 ns = key
             else:
                 ns = ns[:-1] # strip trailing ':'
-                
+
             if ns == 'plugin':
                 try:
                     self.visualizer.add_module(key, **dict(config.items(section)))
@@ -198,7 +198,7 @@ class Main:
         #self.visualizer.add_module('stub')
         #self.visualizer.add_module('static', filename='info.txt', text_font="Verdana 12")
         self.visualizer.connect('motion_notify_event', self.cursor_show)
-        
+
         self.area.pack_start(self.visualizer)
         self.window.show_all()
 
@@ -239,7 +239,7 @@ class Main:
             return
 
         self.visualizer.window.set_cursor(self.cursor)
-    
+
     def cursor_show(self, window, event):
         if not self.fullscreen:
             return
