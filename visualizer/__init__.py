@@ -134,7 +134,7 @@ class Main:
                     timeout = 0
 
                 try:
-                    rl,wl,xl = select([x for x in self.consumers if x.sock is not None],[],[],timeout)
+                    rl,wl,xl = select([x for x in self.consumers if x.fileno() is not None],[],[],timeout)
                 except Exception, e:
                     if e.args[0] == errno.EINTR:
                         # reloading?
@@ -152,7 +152,7 @@ class Main:
                         traceback.print_exc()
 
                 # try to reconnect disconnected consumers
-                for con in [x for x in self.consumers if x.sock is None]:
+                for con in [x for x in self.consumers if x.fileno() is None]:
                     con.reconnect()
 
             except:

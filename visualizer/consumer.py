@@ -96,4 +96,5 @@ class Consumer(object):
         return response.close()
 
     def fileno(self):
+        if self.sock is None: return None
         return self.sock.fileno()
