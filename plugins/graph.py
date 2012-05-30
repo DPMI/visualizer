@@ -146,7 +146,7 @@ class Graph(Plugin, PluginUI):
     def render_title(self):
         self.cr.save()
         self.cr.translate(5, 5)
-        self.text("<u>%s</u>" % self._title, self.font_a)
+        self.text("%s" % self._title, self.font_a)
         self.cr.restore()
 
     def render_chart(self):
