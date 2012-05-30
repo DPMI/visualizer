@@ -108,6 +108,13 @@ class Main:
                     traceback.print_exc()
                     print >> sys.stderr, 'Consumer %s:%d' % (host, port)
 
+            if ns == 'process':
+                command = config.get(section, 'command')
+                dataset = config.get(section, 'dataset')
+
+                con = consumer.Process(command, dataset)
+                self.consumers.append(con)
+
         print 'Available consumers'
         print '-------------------'
         for con in self.consumers:

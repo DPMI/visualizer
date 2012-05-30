@@ -7,6 +7,8 @@ import httplib
 import traceback
 import struct
 import time
+import subprocess
+import shlex
 
 class Consumer(object):
     def __init__(self, host, port):
@@ -98,3 +100,32 @@ class Consumer(object):
     def fileno(self):
         if self.sock is None: return None
         return self.sock.fileno()
+
+class Process:
+    def __init__(self, command, dataset):
+        self.command = shlex.split(command)
+        self.dataset = [dataset]
+        self.callback = []
+        self.proc = None
+
+    def __str__(self):
+        return '<Process "%s">' % self.command
+
+    def fileno(self):
+        if self.proc is None: return None
+        if self.proc.poll() is not None: return None
+        return self.proc.stdout.fileno()
+
+    def connect(self):
+        self.proc = subprocess.Popen(self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    def reconnect(self):
+        self.connect()
+
+    def subscribe(self, dataset, callback):
+        self.callback.append(callback)
+
+    def pull(self):
+        data = self.proc.stdout.readline().strip()
+        for func in self.callback:
+            func(self.dataset[0], data)
