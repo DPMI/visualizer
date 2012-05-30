@@ -210,8 +210,8 @@ class Graph(Plugin, PluginUI):
 
         # vertical
         cr.save()
-        cr.rotate(math.pi/2)
-        cr.translate(20, -25)
+        cr.translate(5, self.size[1]-15)
+        cr.rotate(-math.pi/2)
         self.text(self._ytitle, self.font_label, alignment=pango.ALIGN_CENTER, width=height)
         cr.restore()
 
