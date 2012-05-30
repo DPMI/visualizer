@@ -145,10 +145,7 @@ class Graph(PluginCairo):
                     self.pos += 1
                     self.pos %= self.n_samples
                     self.iteration = 1
-                    if n == 1:
-                        self.data[self.pos] = 0
-                    else:
-                        self.data[self.pos] = prev
+                    self.data[self.pos] = prev
                     self.offset += delta
                     n -= 1
 
