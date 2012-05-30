@@ -50,9 +50,10 @@ class Graph(Plugin, PluginUI):
 
     @attribute(type=str)
     def source(self, value):
-        [ds, flt] = value.split(':')
-        self.dataset.append(ds)
-        self.filter[ds] = sys.modules[__name__].__dict__[flt]
+        for pair in value.split(';'):
+            [ds, flt] = pair.split(':')
+            self.dataset.append(ds)
+            self.filter[ds] = sys.modules[__name__].__dict__[flt]
 
     @attribute(type=str)
     def title(self, value):
