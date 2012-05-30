@@ -99,6 +99,7 @@ class Graph(PluginCairo):
             value = max((self.size[0] - self.margin[1] - self.margin[3]) / div, 1)
 
         self.data = numpy.array([0]*int(value), numpy.float)
+        self.data.fill(self.normalize(0))
         self.n_samples = int(value)
         self.pos = 0
 
