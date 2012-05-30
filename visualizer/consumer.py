@@ -109,7 +109,7 @@ class Process:
         self.proc = None
 
     def __str__(self):
-        return '<Process "%s">' % self.command
+        return '<Process "%s %s">' % (self.command[0], ' '.join(self.command[1:]))
 
     def fileno(self):
         if self.proc is None: return None
