@@ -241,8 +241,10 @@ class Graph(PluginCairo):
         cr.move_to(n, self.data[c])
         while True:
             n += dx
+            cr.line_to(n, self.data[c])
+
             c = (c+1)%self.n_samples
-            if c == self.pos: break
+            if (c+1)%self.n_samples == self.pos: break
 
             cr.line_to(n, self.data[c])
         cr.stroke()
