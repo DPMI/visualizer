@@ -9,6 +9,10 @@ from glob import glob
 # easy access
 from _cairo import CairoWidget as PluginUI
 
+# used for attribute type
+class color:
+    pass
+
 class Attribute():
     def __init__(self, func, name=None, type=None, default=None, sample=None):
         self.func = func

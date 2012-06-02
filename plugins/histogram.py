@@ -1,4 +1,4 @@
-from visualizer.plugin import Plugin, attribute, PluginUI
+from visualizer.plugin import Plugin, attribute, color, PluginUI
 import htmlcolor
 import time, calendar
 import math
@@ -40,6 +40,7 @@ class Histogram(Plugin, PluginUI):
         self.pos = 0
         self.value_range = (0,0)
         self.num_bins = 1
+        self.fill_color = (1,1,1,1)
 
         # chart margins
         self.margin = [30, 5, 20, 30] # top right bottom left
@@ -70,6 +71,10 @@ class Histogram(Plugin, PluginUI):
     @attribute(type=int)
     def bins(self, value):
         self.num_bins = int(value)
+
+    @attribute(type=color)
+    def fill(self, value):
+        self.fill_color = eval(value)
 
     def on_data(self, dataset, raw):
         flt = self.filter[dataset]
@@ -113,7 +118,6 @@ class Histogram(Plugin, PluginUI):
 
         cr.save()
         cr.set_line_width(1.0)
-        cr.set_source_rgba(0,0,0,1)
 
         w = self.size[0] - self.margin[1] - self.margin[3] - 2
         h = self.size[1] - self.margin[0] - self.margin[2] - 2
@@ -124,6 +128,10 @@ class Histogram(Plugin, PluginUI):
             x = i * dx
             y = value * h
             cr.rectangle(x, h, dx, -y);
+
+            cr.set_source_rgba(*self.fill_color)
+            cr.fill_preserve()
+            cr.set_source_rgba(0,0,0,1)
             cr.stroke()
 
         cr.restore()
