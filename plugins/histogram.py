@@ -43,7 +43,7 @@ class Histogram(Plugin, PluginUI):
         self.fill_color = (1,1,1,1)
 
         # chart margins
-        self.margin = [30, 5, 20, 30] # top right bottom left
+        self.margin = [30, 5, 60, 30] # top right bottom left
 
     @attribute(type=str)
     def source(self, value):
@@ -90,7 +90,7 @@ class Histogram(Plugin, PluginUI):
         self.cr.save()
         self.cr.translate(5, 5)
         self.cr.set_source_rgba(0,0,0,1)
-        self.text("%s" % self._title, self.font_a)
+        self.text("%s" % self._title, self.font_a, width=self.size[0])
         self.cr.restore()
 
     def render_chart(self):
@@ -136,6 +136,29 @@ class Histogram(Plugin, PluginUI):
 
         cr.restore()
 
+    def render_labels(self):
+        cr = self.cr
+        span = self.value_range[1] - self.value_range[0]
+        delta = float(span) / self.num_bins
+        w = self.size[0] - self.margin[1] - self.margin[3] - 2
+        dx = float(w) / self.num_bins
+
+        prefix = ['', 'K', 'M', 'G', 'T']
+        def format(x):
+            n = 0
+            while x > 1000 and n+1 < len(prefix):
+                x /= 1000
+                n += 1
+            return '%.1f%s' % (x, prefix[n])
+
+        cr.save()
+        cr.translate(self.margin[3]+dx*0.75, self.size[1] - self.margin[2] + 5)
+        cr.rotate(math.pi / 2)
+        for i in range(self.num_bins):
+            self.text(format(delta*(i+1)), self.font_label, alignment=pango.ALIGN_LEFT, width=dx)
+            cr.translate(0, -dx)
+        cr.restore()
+
     # cairo
     def do_render(self):
         cr = self.cr
@@ -144,6 +167,7 @@ class Histogram(Plugin, PluginUI):
         self.render_title()
         self.render_chart()
         self.render_graph()
+        self.render_labels()
 
     def on_resize(self, size):
         PluginUI.on_resize(self, size)
