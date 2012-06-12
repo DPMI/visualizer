@@ -109,7 +109,6 @@ class Main:
             print ' *', k, v
         print
 
-        self.n = 0
         def foo(self, *args):
             try:
                 timeout = 0.1
