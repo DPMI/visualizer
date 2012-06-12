@@ -232,7 +232,7 @@ class Main:
         return d
 
     def parse_config(self, config):
-        pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
+        pattern = re.compile('(\w+:)?(\w+)(?:/(\w+))?')
         for section in config.sections():
             x = pattern.match(section)
             if x is None:
