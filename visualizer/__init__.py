@@ -80,42 +80,7 @@ class Main:
         except:
             pass
 
-        # retrieve consumers from config
-        pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
-        for section in config.sections():
-            x = pattern.match(section)
-            if x is None:
-                print >> sys.stderr, 'Failed to parse section "%s", ignoring.' % section
-                continue
-            ns, key, index = x.groups()
-            if ns is None:
-                ns = key
-            else:
-                ns = ns[:-1] # strip trailing ':'
-
-            if ns == 'consumer':
-                host = config.get(section, 'host')
-                port = config.getint(section, 'port')
-
-                con = consumer.Consumer(host, port)
-                self.consumers.append(con)
-
-                try:
-                    con.connect()
-                except socket.error, e:
-                    if e.errno != 111: # connection refused
-                        traceback.print_exc()
-                        print >> sys.stderr, 'Consumer %s:%d' % (host, port)
-                except:
-                    traceback.print_exc()
-                    print >> sys.stderr, 'Consumer %s:%d' % (host, port)
-
-            if ns == 'process':
-                command = config.get(section, 'command')
-                dataset = config.get(section, 'dataset')
-
-                con = consumer.Process(command, dataset)
-                self.consumers.append(con)
+        self.parse_config(config)
 
         print 'Available consumers'
         print '-------------------'
@@ -258,6 +223,44 @@ class Main:
                 gobject.source_remove(self.cursor_timer)
             self.cursor_timer = gobject.timeout_add(self.cursor_timeout, self.cursor_hide)
         self.visualizer.window.set_cursor(None)
+
+    def parse_config(self, config):
+        # retrieve consumers from config
+        pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
+        for section in config.sections():
+            x = pattern.match(section)
+            if x is None:
+                print >> sys.stderr, 'Failed to parse section "%s", ignoring.' % section
+                continue
+            ns, key, index = x.groups()
+            if ns is None:
+                ns = key
+            else:
+                ns = ns[:-1] # strip trailing ':'
+
+            if ns == 'consumer':
+                host = config.get(section, 'host')
+                port = config.getint(section, 'port')
+
+                con = consumer.Consumer(host, port)
+                self.consumers.append(con)
+
+                try:
+                    con.connect()
+                except socket.error, e:
+                    if e.errno != 111: # connection refused
+                        traceback.print_exc()
+                        print >> sys.stderr, 'Consumer %s:%d' % (host, port)
+                except:
+                    traceback.print_exc()
+                    print >> sys.stderr, 'Consumer %s:%d' % (host, port)
+
+            if ns == 'process':
+                command = config.get(section, 'command')
+                dataset = config.get(section, 'dataset')
+
+                con = consumer.Process(command, dataset)
+                self.consumers.append(con)
 
 def trim(docstring):
     """Parse docstring. From python docs."""
