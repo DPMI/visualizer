@@ -133,6 +133,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
     def configure(self, widget, event=None):
         with self.drawable():
+            self.size = (widget.allocation.width, widget.allocation.height)
             glViewport (0, 0, widget.allocation.width, widget.allocation.height);
 
             # setup othogonal projection matrix with (0,0) in the upper left corner and with a size of 1x1

@@ -87,8 +87,28 @@ class Main:
         color = gtk.gdk.Color()
         self.cursor = gtk.gdk.Cursor(pix, pix, color, color, 0, 0)
 
+        # guess resolution
+        size = (800,600)
+        if self.fullscreen:
+            dgd = gtk.gdk.display_get_default()
+            gsd = dgd.get_default_screen()
+            size = (gsd.get_width(), gsd.get_height())
+
         # setup visualizer
-        self.visualizer = Canvas(gl_config, size=(800, 600), transition_time=self.transition)
+        self.visualizer = Canvas(gl_config, size=size, transition_time=self.transition)
+        self.visualizer.connect('motion_notify_event', self.cursor_show)
+        self.area.pack_start(self.visualizer)
+        self.window.show_all()
+
+        if self.fullscreen:
+            self.window.fullscreen()
+            self.notebook.set_show_tabs(False)
+            self.visualizer.window.set_cursor(self.cursor)
+
+        # Process events so window is fully created after this point.
+        gtk.main_iteration(True)
+        while gtk.events_pending():
+            gtk.main_iteration(False)
 
         # parse rest of config.
         self.parse_config(config)
@@ -112,18 +132,9 @@ class Main:
             print ' *', k, v
         print
 
-        # Initialize visualizer
+        # Initialize plugins. Must be done after fullscreen-mode so variables depending on size will work.
         self.visualizer.dataset = self.dataset # fulhack
         self.visualizer.init_plugins()
-        self.visualizer.connect('motion_notify_event', self.cursor_show)
-
-        if self.fullscreen:
-            self.window.fullscreen()
-            self.notebook.set_show_tabs(False)
-            self.visualizer.window.set_cursor(self.cursor)
-
-        self.area.pack_start(self.visualizer)
-        self.window.show_all()
 
         signal(SIGHUP, self.reload)
         gobject.idle_add(self.expire)
