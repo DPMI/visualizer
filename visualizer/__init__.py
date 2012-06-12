@@ -146,13 +146,6 @@ class Main:
         # fulhack
         self.visualizer.dataset = self.dataset
 
-        #self.visualizer.add_module('overview')
-        #self.visualizer.add_module('overview_stats')
-        #self.visualizer.add_module('http_host')
-        #self.visualizer.add_module('bitrate')
-        #self.visualizer.add_module('utilization')
-        #self.visualizer.add_module('stub')
-        #self.visualizer.add_module('static', filename='info.txt', text_font="Verdana 12")
         self.visualizer.connect('motion_notify_event', self.cursor_show)
 
         self.area.pack_start(self.visualizer)
