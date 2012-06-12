@@ -110,18 +110,18 @@ class Main:
             print ' *', k, v
         print
 
-        # fulhack
-        self.visualizer.dataset = self.dataset
-
+        # Initialize visualizer
+        self.visualizer.dataset = self.dataset # fulhack
+        self.visualizer.init_plugins()
         self.visualizer.connect('motion_notify_event', self.cursor_show)
-
-        self.area.pack_start(self.visualizer)
-        self.window.show_all()
 
         if self.fullscreen:
             self.window.fullscreen()
             self.notebook.set_show_tabs(False)
             self.visualizer.window.set_cursor(self.cursor)
+
+        self.area.pack_start(self.visualizer)
+        self.window.show_all()
 
         signal(SIGHUP, self.reload)
         gobject.idle_add(self.expire)
@@ -229,7 +229,7 @@ class Main:
 
             if ns == 'plugin':
                 try:
-                    self.visualizer.add_module(key, **dict(config.items(section)))
+                    self.visualizer.add_plugin(key, **dict(config.items(section)))
                 except:
                     traceback.print_exc()
 

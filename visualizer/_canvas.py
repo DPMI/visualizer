@@ -75,7 +75,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         # this could be implemented in this class, but it is harder to understand "with self"
         return GLContext(self)
 
-    def add_module(self, name, **kwargs):
+    def add_plugin(self, name, **kwargs):
         info = imp.find_module(name, ['plugins'])
         if info[0] == None:
             raise IOError, 'No such plugin: %s' % name
@@ -111,8 +111,12 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 print >> sys.stderr, 'When trying to add plugin %s' % name
                 return
             print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod)
+            self.plugins.append((plugin,mod))
+        finally:
+            info[0].close()
 
-            # initialize variables used by canvas
+    def init_plugins(self):
+        for plugin, mod in self.plugins:
             plugin._last_render = 0
 
             # subscribe to required datasets
@@ -126,10 +130,6 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 except Exception, e:
                     traceback.print_exc()
                     raise RuntimeError, 'Plugin "%s" requires dataset "%s" but consumer refused subscription: %s' % (name, ds, str(e))
-
-            self.plugins.append((plugin,mod))
-        finally:
-            info[0].close()
 
     def configure(self, widget, event=None):
         with self.drawable():
