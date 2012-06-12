@@ -145,7 +145,11 @@ class Consumer(object):
 
 class Fifo:
     def __init__(self, addr, iface):
-        pass
+        self.addr = addr
+        self.iface = iface
+
+    def __str__(self):
+        return '<FIFO addr="%s" iface="%s">' % (self.addr, self.iface)
 
 class Process:
     def __init__(self, command, dataset, fifo, index):
