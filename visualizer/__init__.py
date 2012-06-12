@@ -80,6 +80,15 @@ class Main:
         except:
             pass
 
+        # cursor
+        pix = gtk.gdk.Pixmap(None, 1, 1, 1)
+        color = gtk.gdk.Color()
+        self.cursor = gtk.gdk.Cursor(pix, pix, color, color, 0, 0)
+
+        # setup visualizer
+        self.visualizer = Canvas(gl_config, size=(800, 600), transition_time=self.transition)
+
+        # parse rest of config.
         self.parse_config(config)
 
         print 'Available consumers'
@@ -134,35 +143,8 @@ class Main:
             finally:
                 return True
 
-        # cursor
-        pix = gtk.gdk.Pixmap(None, 1, 1, 1)
-        color = gtk.gdk.Color()
-        self.cursor = gtk.gdk.Cursor(pix, pix, color, color, 0, 0)
-
-        # setup visualizer
-        self.visualizer = Canvas(gl_config, size=(800, 600), transition_time=self.transition)
-
         # fulhack
         self.visualizer.dataset = self.dataset
-
-        # load plugins
-        pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
-        for section in config.sections():
-            x = pattern.match(section)
-            if x is None:
-                print >> sys.stderr, 'Failed to parse section "%s", ignoring.' % section
-                continue
-            ns, key, index = x.groups()
-            if ns is None:
-                ns = key
-            else:
-                ns = ns[:-1] # strip trailing ':'
-
-            if ns == 'plugin':
-                try:
-                    self.visualizer.add_module(key, **dict(config.items(section)))
-                except Exception, e:
-                    print >> sys.stderr, e
 
         #self.visualizer.add_module('overview')
         #self.visualizer.add_module('overview_stats')
@@ -225,7 +207,6 @@ class Main:
         self.visualizer.window.set_cursor(None)
 
     def parse_config(self, config):
-        # retrieve consumers from config
         pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
         for section in config.sections():
             x = pattern.match(section)
@@ -261,6 +242,12 @@ class Main:
 
                 con = consumer.Process(command, dataset)
                 self.consumers.append(con)
+
+            if ns == 'plugin':
+                try:
+                    self.visualizer.add_module(key, **dict(config.items(section)))
+                except:
+                    traceback.print_exc()
 
 def trim(docstring):
     """Parse docstring. From python docs."""

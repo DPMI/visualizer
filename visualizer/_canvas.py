@@ -44,6 +44,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.size = size
         self.rows = 3
         self.plugins = []
+        self.dataset = []
         self.current = 0
         self.frames = 0
         self.transition_step = 0.0
