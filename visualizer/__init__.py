@@ -113,6 +113,7 @@ class Main:
         # parse rest of config.
         self.parse_config(config)
 
+        print
         print 'Available consumers'
         print '-------------------'
         for con in self.consumers:
