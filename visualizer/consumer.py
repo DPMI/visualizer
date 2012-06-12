@@ -1,3 +1,4 @@
+import os
 import sys
 import socket
 import json
@@ -12,6 +13,7 @@ import shlex
 import errno
 import logging
 from select import select
+from threading import Thread
 
 consumer_log = logging.getLogger('consumer')
 fifo_log = logging.getLogger('fifo')
@@ -143,13 +145,30 @@ class Consumer(object):
         if self.sock is None: return None
         return self.sock.fileno()
 
-class Fifo:
-    def __init__(self, addr, iface):
+class Fifo(Thread):
+    def __init__(self, key, addr, iface):
+        Thread.__init__(self)
+        self.key = key
         self.addr = addr
         self.iface = iface
+        self.dst = []
+        self.running = False
 
     def __str__(self):
         return '<FIFO addr="%s" iface="%s">' % (self.addr, self.iface)
+
+    def stop(self):
+        self.running = False
+
+    def get_pipe(self):
+        name = '/var/tmp/viz_%s_%d:%d.fifo' % (self.key, os.getpid(), len(self.dst))
+        self.dst.append(name)
+        return name
+
+    def run(self):
+        self.running = True
+        while self.running:
+            pass
 
 class Process:
     def __init__(self, command, dataset, fifo, index):
@@ -158,6 +177,9 @@ class Process:
         self.callback = []
         self.proc = None
         self.log = logging.getLogger('process/%s' % str(index))
+
+        if fifo is not None:
+            self.command.append('fifo://%s' % fifo)
 
     def __str__(self):
         return '<Process "%s %s">' % (self.command[0], ' '.join(self.command[1:]))

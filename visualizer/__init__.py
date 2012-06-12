@@ -140,6 +140,10 @@ class Main:
         self.visualizer.dataset = self.dataset # fulhack
         self.visualizer.init_all_plugins()
 
+        # Initialize all FIFOs. Must be done after consumers has been started or
+        # the actual FIFOs hasn't been created yet.
+        for fifo in self.fifo.itervalues(): fifo.start()
+
         # Setup signal and event handling
         signal(SIGHUP, self.handle_sighup)
         signal(SIGINT, self.handle_sigint)
@@ -191,6 +195,9 @@ class Main:
 
     def destroy(self, widget, data=None):
         self.quit()
+
+    def kill(self):
+        for fifo in self.fifo.itervalues(): fifo.stop()
 
     def on_main_window_state_event(self, window, event):
         self.fullscreen = bool(gtk.gdk.WINDOW_STATE_FULLSCREEN & event.new_window_state)
@@ -271,7 +278,7 @@ class Main:
         self.consumers.append(consumer)
 
     def add_fifo(self, key, attrib):
-        self.fifo[key] = consumer.Fifo(**attrib)
+        self.fifo[key] = consumer.Fifo(key=key, **attrib)
 
     def parse_attrib(self, attrib):
         global re_attrib
@@ -324,7 +331,11 @@ class Main:
                 command = a['command']
                 dataset = a['dataset']
                 fifo    = a.get('fifo', None)
-                con = consumer.Process(a['command'], a['dataset'], fifo, index)
+
+                if fifo is not None:
+                    fifo = self.fifo[fifo].get_pipe()
+
+                con = consumer.Process(command, dataset, fifo, index)
                 self.add_consumer(con)
 
             if ns == 'plugin':
@@ -405,6 +416,7 @@ def run():
     try:
         main = Main(config, filename=args.config)
         gtk.main()
+        main.kill()
     finally:
         os.unlink(pidlock)
 
