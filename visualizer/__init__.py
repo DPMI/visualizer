@@ -94,6 +94,7 @@ class Main:
         print 'Available consumers'
         print '-------------------'
         for con in self.consumers:
+            con.reconnect()
             print ' *', con
         print
 
