@@ -109,39 +109,6 @@ class Main:
             print ' *', k, v
         print
 
-        def foo(self, *args):
-            try:
-                timeout = 0.1
-                if self.visualizer.transition_enabled:
-                    timeout = 0
-
-                try:
-                    rl,wl,xl = select([x for x in self.consumers if x.fileno() is not None],[],[],timeout)
-                except Exception, e:
-                    if e.args[0] == errno.EINTR:
-                        # reloading?
-                        return True
-                    raise
-
-                # pull data from connected consumers
-                for con in rl:
-                    try:
-                        con.pull()
-                    except socket.error:
-                        traceback.print_exc()
-                        con.sock = None
-                    except:
-                        traceback.print_exc()
-
-                # try to reconnect disconnected consumers
-                for con in [x for x in self.consumers if x.fileno() is None]:
-                    con.reconnect()
-
-            except:
-                traceback.print_exc()
-            finally:
-                return True
-
         # fulhack
         self.visualizer.dataset = self.dataset
 
@@ -156,9 +123,7 @@ class Main:
             self.visualizer.window.set_cursor(self.cursor)
 
         signal(SIGHUP, self.reload)
-
-        gobject.idle_add(foo, self)
-
+        gobject.idle_add(self.expire)
 
     def reload(self, signum, frame):
         print 'herp derp, should reload config...'
@@ -181,6 +146,39 @@ class Main:
             self.window.fullscreen()
             self.notebook.set_show_tabs(False)
             self.cursor_timer = gobject.timeout_add(self.cursor_timeout, self.cursor_hide)
+
+    def expire(self, *args):
+        try:
+            timeout = 0.1
+            if self.visualizer.transition_enabled:
+                timeout = 0
+
+            try:
+                rl,wl,xl = select([x for x in self.consumers if x.fileno() is not None],[],[],timeout)
+            except Exception, e:
+                if e.args[0] == errno.EINTR:
+                    # reloading?
+                    return True
+                raise
+
+            # pull data from connected consumers
+            for con in rl:
+                try:
+                    con.pull()
+                except socket.error:
+                    traceback.print_exc()
+                    con.sock = None
+                except:
+                    traceback.print_exc()
+
+            # try to reconnect disconnected consumers
+            for con in [x for x in self.consumers if x.fileno() is None]:
+                con.reconnect()
+
+        except:
+            traceback.print_exc()
+        finally:
+            return True
 
     def cursor_hide(self):
         if not self.fullscreen:
