@@ -309,7 +309,10 @@ class Main:
                     self.log.error('process/%s missing dataset, ignored' % index)
                     continue
 
-                con = consumer.Process(a['command'], a['dataset'], index)
+                command = a['command']
+                dataset = a['dataset']
+                fifo    = a.get('fifo', None)
+                con = consumer.Process(a['command'], a['dataset'], fifo, index)
                 self.add_consumer(con)
 
             if ns == 'plugin':

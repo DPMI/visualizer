@@ -144,7 +144,7 @@ class Consumer(object):
         return self.sock.fileno()
 
 class Process:
-    def __init__(self, command, dataset, index):
+    def __init__(self, command, dataset, fifo, index):
         self.command = shlex.split(command)
         self.dataset = [dataset]
         self.callback = []
