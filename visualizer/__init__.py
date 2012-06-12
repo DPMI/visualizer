@@ -20,6 +20,8 @@ from glob import glob
 import consumer
 from _canvas import Canvas
 
+re_attrib = re.compile(r'\$[{]([^}]*)[}]')
+
 def ConfigParserWrapper(func):
     @wraps(func)
     def outer(x):
@@ -200,6 +202,23 @@ class Main:
     def add_consumer(self, consumer):
         self.consumers.append(consumer)
 
+    def parse_attrib(self, attrib):
+        global re_attrib
+
+        local = {
+            'width': float(self.visualizer.size[0]),
+            'height': float(self.visualizer.size[1]),
+        }
+
+        def sub(match):
+            key = match.group(1)
+            return str(eval(key, {}, local))
+
+        d = {}
+        for k,v in attrib.iteritems():
+            d[k] = re_attrib.sub(sub, v)
+        return d
+
     def parse_config(self, config):
         pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
         for section in config.sections():
@@ -212,24 +231,19 @@ class Main:
                 ns = key
             else:
                 ns = ns[:-1] # strip trailing ':'
+            a = self.parse_attrib(dict(config.items(section)))
 
             if ns == 'consumer':
-                host = config.get(section, 'host')
-                port = config.getint(section, 'port')
-
-                con = consumer.Consumer(host, port)
+                con = consumer.Consumer(a['host'], a['port'])
                 self.add_consumer(con)
 
             if ns == 'process':
-                command = config.get(section, 'command')
-                dataset = config.get(section, 'dataset')
-
-                con = consumer.Process(command, dataset)
+                con = consumer.Process(a['command'], a['dataset'])
                 self.add_consumer(con)
 
             if ns == 'plugin':
                 try:
-                    self.visualizer.add_plugin(key, **dict(config.items(section)))
+                    self.visualizer.add_plugin(key, a)
                 except:
                     traceback.print_exc()
 

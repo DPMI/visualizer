@@ -75,7 +75,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         # this could be implemented in this class, but it is harder to understand "with self"
         return GLContext(self)
 
-    def add_plugin(self, name, **kwargs):
+    def add_plugin(self, name, kwargs):
         info = imp.find_module(name, ['plugins'])
         if info[0] == None:
             raise IOError, 'No such plugin: %s' % name
