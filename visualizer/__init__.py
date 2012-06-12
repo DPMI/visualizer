@@ -199,6 +199,9 @@ class Main:
             self.cursor_timer = gobject.timeout_add(self.cursor_timeout, self.cursor_hide)
         self.visualizer.window.set_cursor(None)
 
+    def add_consumer(self, consumer):
+        self.consumers.append(consumer)
+
     def parse_config(self, config):
         pattern = re.compile('(\w+:)?(\w+)(/[0-9]+)?') # might want to consider lookahead
         for section in config.sections():
@@ -217,24 +220,14 @@ class Main:
                 port = config.getint(section, 'port')
 
                 con = consumer.Consumer(host, port)
-                self.consumers.append(con)
-
-                try:
-                    con.connect()
-                except socket.error, e:
-                    if e.errno != 111: # connection refused
-                        traceback.print_exc()
-                        print >> sys.stderr, 'Consumer %s:%d' % (host, port)
-                except:
-                    traceback.print_exc()
-                    print >> sys.stderr, 'Consumer %s:%d' % (host, port)
+                self.add_consumer(con)
 
             if ns == 'process':
                 command = config.get(section, 'command')
                 dataset = config.get(section, 'dataset')
 
                 con = consumer.Process(command, dataset)
-                self.consumers.append(con)
+                self.add_consumer(con)
 
             if ns == 'plugin':
                 try:
