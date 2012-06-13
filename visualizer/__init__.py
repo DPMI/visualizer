@@ -197,7 +197,16 @@ class Main:
         self.quit()
 
     def kill(self):
-        for fifo in self.fifo.itervalues(): fifo.stop()
+        # instruct to stop process
+        for p in itertools.chain(self.fifo.itervalues(), self.consumers):
+            try:
+                p.stop()
+            except:
+                traceback.print_exc()
+
+        # wait until all is terminated
+        for p in itertools.chain(self.fifo.itervalues(), self.consumers):
+            p.join()
 
     def on_main_window_state_event(self, window, event):
         self.fullscreen = bool(gtk.gdk.WINDOW_STATE_FULLSCREEN & event.new_window_state)

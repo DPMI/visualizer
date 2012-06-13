@@ -13,7 +13,8 @@ import shlex
 import errno
 import logging
 from select import select
-from threading import Thread
+from threading import Thread, Event
+from signal import SIGTERM
 
 consumer_log = logging.getLogger('consumer')
 fifo_log = logging.getLogger('fifo')
@@ -34,6 +35,12 @@ class Consumer(object):
         state = self.sock is not None and "connected" or ("disconnected: %s" % self.sockerr)
         tmp = self.peer + (state,)
         return '<Consumer %s:%d (%s)>' % tmp
+
+    def stop(self):
+        pass # do nothing
+
+    def join(self, timeout):
+        pass # not a thread
 
     def connect(self):
         self.log.info('Connecting to %s:%d', *self.peer)
@@ -148,17 +155,21 @@ class Consumer(object):
 class Fifo(Thread):
     def __init__(self, key, addr, iface):
         Thread.__init__(self)
+        self.daemon = True
         self.key = key
         self.addr = addr
         self.iface = iface
         self.dst = []
-        self.running = False
+        self.running = Event()
 
     def __str__(self):
         return '<FIFO addr="%s" iface="%s">' % (self.addr, self.iface)
 
     def stop(self):
-        self.running = False
+        self.running.clear()
+
+    def join(self):
+        Thread.join(self)
 
     def get_pipe(self):
         name = '/var/tmp/viz_%s_%d:%d.fifo' % (self.key, os.getpid(), len(self.dst))
@@ -166,8 +177,8 @@ class Fifo(Thread):
         return name
 
     def run(self):
-        self.running = True
-        while self.running:
+        self.running.set()
+        while self.running.is_set():
             pass
 
 class Process:
@@ -183,6 +194,16 @@ class Process:
 
     def __str__(self):
         return '<Process "%s %s">' % (self.command[0], ' '.join(self.command[1:]))
+
+    def stop(self):
+        self.log.info('Stopping process using SIGTERM')
+        self.proc.send_signal(SIGTERM)
+
+    def join(self):
+        self.proc.wait()
+        self.log.info('Process exited with code %d', self.proc.returncode)
+        self.log = None
+        self.proc = None
 
     def fileno(self):
         if self.proc is None: return None

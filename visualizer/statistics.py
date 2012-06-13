@@ -19,6 +19,12 @@ class Statistics(object):
     def subscribe(self, dataset, callback):
         self.callback.append(callback)
 
+    def stop(self):
+        pass
+
+    def join(self):
+        pass
+
     def pull(self):
         os.read(self.pipe[0], 1)
         for func in self.callback:
