@@ -9,6 +9,7 @@ import itertools
 import traceback
 import time
 import threading
+import logging
 from functools import wraps
 from OpenGL.GL import *
 from OpenGL.GLX import *
@@ -110,7 +111,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 traceback.print_exc()
                 print >> sys.stderr, 'When trying to add plugin %s' % name
                 return
-            print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod)
+            logging.getLogger('plugin').info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
             self.plugins.append((plugin,mod))
         finally:
             info[0].close()

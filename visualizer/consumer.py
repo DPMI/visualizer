@@ -9,6 +9,10 @@ import struct
 import time
 import subprocess
 import shlex
+import logging
+
+consumer_log = logging.getLogger('consumer')
+fifo_log = logging.getLogger('fifo')
 
 class Consumer(object):
     def __init__(self, host, port):
@@ -107,6 +111,7 @@ class Process:
         self.dataset = [dataset]
         self.callback = []
         self.proc = None
+        self.log = None
 
     def __str__(self):
         return '<Process "%s %s">' % (self.command[0], ' '.join(self.command[1:]))
@@ -118,6 +123,9 @@ class Process:
 
     def connect(self):
         self.proc = subprocess.Popen(self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.log = logging.getLogger('p%d' % self.proc.pid)
+        self.log.info('Opened process %d as "%s"', self.proc.pid, ' '.join(self.command))
+        self.log.info('Dataset "%s" is available', self.dataset[0])
 
     def reconnect(self):
         self.connect()

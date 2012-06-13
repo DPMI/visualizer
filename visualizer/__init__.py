@@ -16,6 +16,8 @@ import imp
 from functools import wraps
 from signal import signal, SIGUSR1, SIGINT, SIGHUP
 from glob import glob
+import itertools
+import logging
 
 import consumer
 from _canvas import Canvas
@@ -53,6 +55,7 @@ class Main:
     transition = 15
 
     def __init__(self, config):
+        self.log = logging.getLogger('main')
         builder = gtk.Builder()
         builder.add_from_file(join(dirname(__file__),'main.ui'))
         builder.connect_signals(self)
@@ -92,6 +95,7 @@ class Main:
             size = (gsd.get_width(), gsd.get_height())
 
         # setup visualizer
+        self.log.debug('Creating canvas')
         self.visualizer = Canvas(gl_config, size=size, transition_time=self.transition)
         self.visualizer.connect('motion_notify_event', self.cursor_show)
         self.area.pack_start(self.visualizer)
@@ -108,27 +112,29 @@ class Main:
             gtk.main_iteration(False)
 
         # parse rest of config.
+        self.log.debug('Parsing config')
         self.parse_config(config)
-
-        print
-        print 'Available consumers'
-        print '-------------------'
-        for con in self.consumers:
-            con.reconnect()
-            print ' *', con
-        print
 
         # retrieve datasets from consumers
         self.dataset = {}
         for con in self.consumers:
+            con.reconnect()
             for ds in con.dataset:
                 self.dataset[ds] = con
 
-        print 'Available datasets'
-        print '------------------'
-        for k,v in self.dataset.iteritems():
-            print ' *', k, v
-        print
+        if len(self.consumers) > 0:
+            print 'Available consumers'
+            print '-------------------'
+            for con in self.consumers:
+                print ' *', con
+            print
+
+        if len(self.dataset) > 0:
+            print 'Available datasets'
+            print '------------------'
+            for k,v in self.dataset.iteritems():
+                print ' * %s: %s' % (k, v)
+            print
 
         # Initialize plugins. Must be done after fullscreen-mode so variables depending on size will work.
         self.visualizer.dataset = self.dataset # fulhack
@@ -144,6 +150,9 @@ class Main:
         self.quit()
 
     def quit(self, *args):
+        self.log.debug('Application quit')
+
+        # Stop GTK main loop
         gtk.main_quit()
 
     def destroy(self, widget, data=None):
@@ -363,6 +372,21 @@ def run():
         plugin_usage(args.plugin)
         sys.exit(0)
 
+    # setup logging
+    filename = 'visualizer.log'
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(logging.Formatter('%(name)-8s: %(levelname)-8s %(message)s'))
+    fh = logging.FileHandler(filename)
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter('%(asctime)s [%(name)-12s] [%(levelname)-8s] %(message)s', '%a, %d %b %Y %H:%M%S %z'))
+    log = logging.getLogger('')
+    log.addHandler(ch)
+    log.addHandler(fh)
+    log.setLevel(logging.DEBUG)
+    logging.getLogger('OpenGL.extensions').setLevel(logging.WARNING)
+    log.debug('Visualizer started')
+
     if not args.config:
         if not os.path.exists('visualizer.conf'):
             print >> sys.stderr, 'No config-file specified and "visualizer.conf" not found'
@@ -386,3 +410,5 @@ def run():
         gtk.main()
     finally:
         os.unlink(pidlock)
+
+    log.debug('Visualizer stopped')
