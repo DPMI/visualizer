@@ -12,7 +12,7 @@ class Attribute():
 
     def __str__(self):
         return '<Attribute %s>' % self.name
-        
+
 def attribute(*args, **kwargs):
     def wrapper(func):
         func._attribute = Attribute(func.__name__, *args, **kwargs)
@@ -38,13 +38,13 @@ class Plugin(object):
 
     def __exit__(self, type, value, traceback):
         self.unlock()
-    
+
     def on_packet(self, stream, frame):
         pass # do nothing
 
     def on_update(self, consumer):
         pass # do nothing
-    
+
     def attributes(self):
         return [x._attribute for x in self.__class__.__dict__.values() if hasattr(x, '_attribute')]
 
@@ -59,7 +59,7 @@ class Plugin(object):
 
     def bind(self):
         glBindTexture(GL_TEXTURE_2D, self._texture[self._current])
-    
+
     def _generate_framebuffer(self, size):
         if self._fbo is None:
             self._fbo = glGenFramebuffers(2)
@@ -68,7 +68,7 @@ class Plugin(object):
 
         w = size[0]
         h = size[1]
-        
+
         try:
             for i in range(2):
                 glBindFramebuffer(GL_FRAMEBUFFER, self._fbo[i])
@@ -79,11 +79,11 @@ class Plugin(object):
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
                 glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self._texture[i], 0)
-                
+
                 err = glCheckFramebufferStatus(GL_FRAMEBUFFER);
                 if ( err != GL_FRAMEBUFFER_COMPLETE ):
                     raise RuntimeError, "Framebuffer incomplete\n"
-        
+
             glClearColor(0, 0, 0, 1)
             glClear(GL_COLOR_BUFFER_BIT)
         finally:
