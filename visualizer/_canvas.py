@@ -68,6 +68,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def __init__(self, config, size, transition_time=15):
         gtk.DrawingArea.__init__(self)
 
+        self.size = size
         self.rows = 3
         self.plugins = []
         self.current = 0
@@ -111,6 +112,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
             try:
                 plugin = mod.factory(**kwargs)
+                plugin.on_resize((self.size[0], self.size[1] / self.rows))
             except:
                 traceback.print_exc()
                 return
@@ -150,6 +152,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             # notify plugins of the new canvas size
             w = widget.allocation.width
             h = widget.allocation.height / self.rows
+            self.size = (widget.allocation.width, widget.allocation.height)
             for plugin, mod in self.plugins:
                 plugin.on_resize((w,h))
 
