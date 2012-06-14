@@ -17,7 +17,7 @@ def whitespace(value):
     return [value.split()]
 
 class Table(Plugin, PluginUI):
-    interval = 0.5
+    interval = 1
 
     def __init__(self):
         Plugin.__init__(self)
