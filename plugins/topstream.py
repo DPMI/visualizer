@@ -14,7 +14,7 @@ version = 0
 api = 1
 
 class TOPstream(Plugin, PluginUI):
-    interval = 60
+    interval = 1
     dataset = ['topstream']
 
     def __init__(self):
