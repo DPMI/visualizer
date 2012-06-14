@@ -78,7 +78,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.set_gl_capability(config)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK|gtk.gdk.POINTER_MOTION_MASK)
         self.set_size_request(size[0], size[1])
-                
+
         # Connect the relevant signals.
         self.connect_after('realize',   self.realize)
         self.connect('configure_event', self.configure)
@@ -105,12 +105,16 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             raise IOError, 'No such plugin: %s' % name
         try:
             mod = imp.load_module('_vis__%s' % name, *info)
+
+            if not hasattr(mod, 'api'):
+                raise IOError, 'plugin "%s" does not define api' % name
+
             try:
                 plugin = mod.factory(**kwargs)
             except:
                 traceback.print_exc()
                 return
-            print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(plugin)
+            print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod)
 
             plugin._last_render = 0
             req = getattr(plugin, 'dataset', [])

@@ -11,23 +11,23 @@ import cairo
 import pango
 import math
 
+name = 'NPL Graph plugin'
+author = ('David Sveningsson', 'dsv@bth.se')
+date = '2011-09-29'
+version = 0
+api = 1
+
 def csv_filter(value):
     for line in value.splitlines():
         yield tuple([float(x.strip('\x00')) for x in line.split(';')])
 
 class Graph(Plugin, PluginUI):
-    name = 'NPL Graph plugin'
-    author = ('David Sveningsson', 'dsv@bth.se')
-    date = '2011-09-29'
-    version = 0
-    api = 1
     interval = 1
 
     def __init__(self):
         Plugin.__init__(self)
         PluginUI.__init__(self, (1,1))
-        self._title = '<Unnamed graph>'
-        self.content = '<b>Lorem</b> ipsum dot sit amet'
+        self._title = '&lt;Unnamed graph&gt;'
         self.font_a = PluginUI.create_font(self.cr, size=16)
         self.font_b = PluginUI.create_font(self.cr, size=12)
         self.font_label = PluginUI.create_font(self.cr, size=10)
@@ -103,7 +103,7 @@ class Graph(Plugin, PluginUI):
         lower = self._range_y[0]
         upper = self._range_y[1]
         span = upper - lower
-        
+
         # calculate where in the range value lies
         s = (value - lower) / span
 
@@ -111,7 +111,7 @@ class Graph(Plugin, PluginUI):
         height = self.size[1] - self.margin[0] - self.margin[2]
 
         return height - (height * s)
-    
+
     def on_data(self, dataset, raw):
         delta = float(abs(self._range_x[0])) / self.n_samples
         flt = self.filter[dataset]
@@ -137,7 +137,7 @@ class Graph(Plugin, PluginUI):
                         self.data[self.pos] = prev
                     self.offset += delta
                     n -= 1
-            
+
             prev = self.data[self.pos]
             tmp = ((value-prev)/(self.iteration))+prev # inc. avg.
             self.iteration += 1
@@ -218,7 +218,7 @@ class Graph(Plugin, PluginUI):
 
     def render_graph(self):
         cr = self.cr
-        
+
         cr.save()
         cr.translate(0, self.margin[0])
         cr.set_source_rgba(0,0,0,1)

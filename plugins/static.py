@@ -6,12 +6,13 @@ import traceback
 from OpenGL.GL import *
 from visualizer.picotime import picotime
 
+name = 'NPL Static content plugin'
+author = ('David Sveningsson', 'dsv@bth.se')
+date = '2011-08-15'
+version = 0
+api = 1
+
 class StaticContent(Plugin, PluginUI):
-    name = 'NPL Static content plugin'
-    author = ('David Sveningsson', 'dsv@bth.se')
-    date = '2011-08-15'
-    version = 0
-    api = 1
     interval = -1
 
     @attribute(type=str)
@@ -26,7 +27,7 @@ class StaticContent(Plugin, PluginUI):
     def __init__(self):
         Plugin.__init__(self)
         PluginUI.__init__(self, (1,1))
-        self.content = '<b>Lorem</b> ipsum dot sit amet'
+        self.content = ''
         self.font = PluginUI.create_font(self.cr, size=16)
 
     # cairo

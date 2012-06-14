@@ -7,19 +7,20 @@ import json
 from socket import ntohs, ntohl
 from OpenGL.GL import *
 
+name = 'NPL Top Stream  plugin'
+author = ('David Sveningsson, Patrik Arlos', 'dsv@bth.se,pal@bth.se')
+date = '2011-06-08'
+version = 0
+api = 1
+
 class TOPstream(Plugin, PluginUI):
-    name = 'NPL Top Stream  plugin'
-    author = ('David Sveningsson, Patrik Arlos', 'dsv@bth.se,pal@bth.se')
-    date = '2011-06-08'
-    version = 0
-    api = 1
     interval = 60
     dataset = ['topstream']
 
     def __init__(self):
         Plugin.__init__(self)
         PluginUI.__init__(self, size=(1,1))
-        
+
         self.font_a = PluginUI.create_font(self.cr, size=16)
         self.font_b = PluginUI.create_font(self.cr, size=12)
         self.hosts = []
@@ -27,7 +28,7 @@ class TOPstream(Plugin, PluginUI):
     def on_resize(self, size):
         Plugin.on_resize(self, size)
         PluginUI.on_resize(self, size)
-    
+
     def on_data(self, ds, data):
         assert ds == 'topstream'
         self.hosts = json.loads(data)
