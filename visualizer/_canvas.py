@@ -98,7 +98,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                     try:
                         attr.set(plugin, v)
                     except Exception, e:
-                        print >> sys.stderr, 'When setting %s.%s: %s' % (name, attr.name, e)
+                        logging.getLogger(name).error('When setting attibute %s: %s', attr.name, e)
                     try:
                         del kwargs[attr.name]
                     except:
@@ -106,7 +106,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
                 # Warn about unused variables
                 for attr in kwargs.keys():
-                    print >> sys.stderr, 'Plugin %s does not have an attribute %s' % (name, attr)
+                    logging.getLogger(name).warning('No such attribute: %s', attr)
             except:
                 traceback.print_exc()
                 print >> sys.stderr, 'When trying to add plugin %s' % name
