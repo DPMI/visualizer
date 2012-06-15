@@ -283,5 +283,3 @@ class Graph(Plugin, PluginUI):
         pass # do not want
 
 factory = Graph
-def factory(**kwargs):
-    item = Graph()

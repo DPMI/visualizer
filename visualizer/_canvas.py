@@ -91,6 +91,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                     print >> sys.stderr, 'Plugin %s does not have an attribute %s' % (name, attr)
             except:
                 traceback.print_exc()
+                print >> sys.stderr, 'When trying to add plugin %s' % name
                 return
             print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod)
 
