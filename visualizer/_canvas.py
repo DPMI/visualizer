@@ -45,6 +45,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.rows = 3
         self.plugins = []
         self.current = 0
+        self.frames = 0
         self.transition_step = 0.0
         self.transition_enabled = False # @note should make a FSM
 
@@ -59,6 +60,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect('expose_event',    self.expose)
         gobject.timeout_add(1000/50, self.expire)
         gobject.timeout_add(transition_time * 1000, self.transition)
+        gobject.timeout_add(1000, self.framerate_expire)
 
         # Create VBO
         self.vbo = vbo.VBO(numpy.array([
@@ -164,6 +166,11 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.queue_draw()
         return True
 
+    def framerate_expire(self):
+        print 'FPS:', self.frames
+        self.frames = 0
+        return True
+
     def transition(self):
         self.transition_enabled = True
         self.transition_time = time.time()
@@ -240,6 +247,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPopMatrix()
 
     def render(self):
+        self.frames += 1
         plugins = self.visible_plugins()
 
         with self.drawable() as gldrawable:
