@@ -34,37 +34,6 @@ class GLContext:
         gldrawable.gl_end()
         return False # exceptions should propagate
 
-class Consumer(threading.Thread):
-    def __init__(self, **kwargs):
-        threading.Thread.__init__(self)
-        self.plugins = []
-        self.consumer = consumer.Consumer(**kwargs)
-        self.running = True
-
-    def stop(self):
-        self.running = False
-
-    def run(self):
-        while self.running:
-            stream, frame = self.consumer.poll(timeout=.5)
-            if stream is None:
-                    continue
-
-            for plugin, mod in self.plugins:
-                try:
-                    with plugin:
-                        plugin.on_packet(stream, frame)
-                except:
-                    traceback.print_exc()
-
-            for plugin, mod in self.plugins:
-                with plugin:
-                    plugin.on_update(self.consumer)
-
-    #def add_stream(self, *args, **kwargs):
-    #    self.consumer.add_stream(*args, **kwargs)
-    #add_stream.__doc__ = consumer.Consumer.add_stream.__doc__
-
 class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def __init__(self, config, size, transition_time=15):
         gtk.DrawingArea.__init__(self)
@@ -85,17 +54,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect_after('realize',   self.realize)
         self.connect('configure_event', self.configure)
         self.connect('expose_event',    self.expose)
-        #self.connect_after('destroy', self.destroy)
         gobject.timeout_add(1000/50, self.expire)
         gobject.timeout_add(transition_time * 1000, self.transition)
-
-        # setup consumer library
-        #self.consumer = Consumer(packets=4096, delay=0.0)
-        #self.consumer.start()
-
-    #@wraps(Consumer.add_stream)
-    #def add_stream(self, *args, **kwargs):
-    #    self.consumer.add_stream(*args, **kwargs)
 
     def drawable(self):
         # this could be implemented in this class, but it is harder to understand "with self"
@@ -134,7 +94,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 return
             print 'Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod)
 
+            # initialize variables used by canvas
             plugin._last_render = 0
+
+            # subscribe to required datasets
             req = getattr(plugin, 'dataset', [])
             for ds in req:
                 if not ds in self.dataset:
@@ -146,12 +109,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                     traceback.print_exc()
                     raise RuntimeError, 'Plugin "%s" requires dataset "%s" but consumer refused subscription: %s' % (name, ds, str(e))
 
-            #try:
-            #    plugin.background('ff00ff')
-            #except:
-            #    traceback.print_exc()
             self.plugins.append((plugin,mod))
-            #self.consumer.plugins = self.plugins
         finally:
             info[0].close()
 
@@ -180,9 +138,6 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             glEnable(GL_TEXTURE_2D)
             glEnable(GL_BLEND)
             glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-    #def destroy(self, widget, event=None):
-    #    self.consumer.stop()
 
     def expire(self):
         if self.transition_enabled:
