@@ -4,6 +4,7 @@ import gtk
 import gtk.gtkgl
 import gobject
 import imp
+import sys
 import itertools
 import traceback
 import time
@@ -111,17 +112,23 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 raise IOError, 'plugin "%s" does not define api' % name
 
             try:
+                # Allocate new plugin
                 plugin = mod.factory()
                 plugin.on_resize((self.size[0], self.size[1] / self.rows))
-
                 attr_table = plugin.attributes()
 
-                for key, value in kwargs.items():
-                    attr = attr_table.get(key, None)
-                    if not attr:
-                        print >> sys.stderr, 'Plugin %s does not have an attribute %s' % (name, key)
-                        continue
-                    attr.set(plugin, value)
+                # Set all attributes
+                for attr in attr_table.values():
+                    v = kwargs.get(attr.name, attr.default)
+                    attr.set(plugin, v)
+                    try:
+                        del kwargs[attr.name]
+                    except:
+                        pass
+
+                # Warn about unused variables
+                for attr in kwargs.keys():
+                    print >> sys.stderr, 'Plugin %s does not have an attribute %s' % (name, attr)
             except:
                 traceback.print_exc()
                 return

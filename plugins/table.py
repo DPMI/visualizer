@@ -26,7 +26,7 @@ class Table(Plugin, PluginUI):
         self.font_a = PluginUI.create_font(self.cr, size=16)
         self.font_b = PluginUI.create_font(self.cr, size=12)
 
-        self.title = 'Unnamed table'
+        self.title = None
         self._header = []
         self._content = []
         self.dataset = []
