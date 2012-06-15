@@ -302,7 +302,7 @@ def plugin_usage(name):
         print
         print 'Attributes'
         print '----------'
-        for attr in plugin.attributes():
+        for attr in plugin.attributes().values():
             print
             print ' - %s (type: %s, default: %s)' % (attr.name, attr.type.__name__, attr.default is None and 'unset' or attr.default)
             if attr.doc:
@@ -312,7 +312,7 @@ def plugin_usage(name):
         print 'Sample'
         print '------'
         print '[plugin:%s/0]' % name
-        for attr in plugin.attributes():
+        for attr in plugin.attributes().values():
             print attr.get_config()
 
     except:

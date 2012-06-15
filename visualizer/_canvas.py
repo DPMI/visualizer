@@ -114,11 +114,14 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 plugin = mod.factory()
                 plugin.on_resize((self.size[0], self.size[1] / self.rows))
 
+                attr_table = plugin.attributes()
+
                 for key, value in kwargs.items():
-                    try:
-                        getattr(plugin, key)(value)
-                    except:
-                        traceback.print_exc()
+                    attr = attr_table.get(key, None)
+                    if not attr:
+                        print >> sys.stderr, 'Plugin %s does not have an attribute %s' % (name, key)
+                        continue
+                    attr.set(plugin, value)
             except:
                 traceback.print_exc()
                 return

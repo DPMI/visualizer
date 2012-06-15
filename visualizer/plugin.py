@@ -6,15 +6,19 @@ from threading import Lock
 from _cairo import CairoWidget as PluginUI
 
 class Attribute():
-    def __init__(self, name, doc, type=None, default=None, sample=None):
-        self.name = name
-        self.doc = doc
+    def __init__(self, func, name=None, type=None, default=None, sample=None):
+        self.func = func
+        self.name = name is not None and name or func.__name__
+        self.doc = func.__doc__
         self.type = type
         self.default = default
         self.sample = sample
 
     def __str__(self):
         return '<Attribute %s>' % self.name
+
+    def set(self, plugin, value):
+        self.func(plugin, value)
 
     def get_config(self):
         if self.sample is not None:
@@ -27,7 +31,7 @@ class Attribute():
 
 def attribute(*args, **kwargs):
     def wrapper(func):
-        func._attribute = Attribute(func.__name__, func.__doc__, *args, **kwargs)
+        func._attribute = Attribute(func, *args, **kwargs)
         return func
     return wrapper
 
@@ -58,7 +62,7 @@ class Plugin(object):
         pass # do nothing
 
     def attributes(self):
-        return [x._attribute for x in self.__class__.__dict__.values() if hasattr(x, '_attribute')]
+        return dict([(x._attribute.name, x._attribute) for x in self.__class__.__dict__.values() if hasattr(x, '_attribute')])
 
     def on_resize(self, size):
         self._generate_framebuffer(size)

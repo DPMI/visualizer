@@ -26,7 +26,7 @@ class Table(Plugin, PluginUI):
         self.font_a = PluginUI.create_font(self.cr, size=16)
         self.font_b = PluginUI.create_font(self.cr, size=12)
 
-        self._title = 'Unnamed table'
+        self.title = 'Unnamed table'
         self._header = []
         self._content = []
         self.dataset = []
@@ -47,10 +47,10 @@ class Table(Plugin, PluginUI):
         self.dataset = [ds]
         self.filter = sys.modules[__name__].__dict__[flt]
 
-    @attribute(type=str)
-    def title(self, value):
+    @attribute(name='title', type=str, default='Unnamed table')
+    def set_title(self, value):
         """Table title"""
-        self._title = value
+        self.title = value
 
     @attribute(type=str)
     def header(self, value):
@@ -95,7 +95,7 @@ class Table(Plugin, PluginUI):
         self.clear((0.95, 0.95, 1.0, 1.0))
 
         cr.translate(5,5)
-        self.text(self._title, self.font_a)
+        self.text(self.title, self.font_a)
 
         cr.translate(0, 30)
 
