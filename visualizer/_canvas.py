@@ -80,7 +80,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 # Set all attributes
                 for attr in attr_table.values():
                     v = kwargs.get(attr.name, attr.default)
-                    attr.set(plugin, v)
+                    try:
+                        attr.set(plugin, v)
+                    except Exception, e:
+                        print >> sys.stderr, 'When setting %s.%s: %s' % (name, attr.name, e)
                     try:
                         del kwargs[attr.name]
                     except:
