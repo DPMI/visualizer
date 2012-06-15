@@ -40,8 +40,8 @@ class Graph(Plugin, PluginUI):
         self._range_x = (-100,0)
         self._range_y = [-100, 100]
         self.offset = None
-        self._xtitle= 'Default [s]'
-        self._ytitle=' Default [unit]'
+        self._xtitle= ''
+        self._ytitle= ''
         self.auto = False
         self._xlines = []
         self._ylines = []
@@ -62,24 +62,36 @@ class Graph(Plugin, PluginUI):
 
     @attribute(type=str)
     def xtitle(self, value):
+        """Label on X-axis."""
         self._xtitle = value
 
     @attribute(type=str)
     def ytitle(self, value):
         self._ytitle = value
 
-    @attribute(type=str)
+    @attribute(type=str, default="-100:0")
     def range_x(self, value):
+        """Value range of X-axis.
+
+        """
         self._range_x = tuple([float(x) for x in value.split(':')])
 
-    @attribute(type=str)
+    @attribute(type=str, default="-100:100")
     def range_y(self, value):
+        """Value range of Y-axis.
+
+        """
         self._range_y = tuple([float(x) for x in value.split(':')])
 
-    @attribute(type=str)
+    @attribute(type=str, sample="150")
     def xlines(self, value):
         """Vertical helper lines.
 
+        A semicolon separated list of x-range units of intervals where vertical
+        help lines should be rendered. If unset no lines is rendered.
+
+        E.g. "150" produces a vertical line every 150 units.
+        """
 
         self._xlines = [float(x) for x in value.split(';')]
 

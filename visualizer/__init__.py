@@ -304,10 +304,16 @@ def plugin_usage(name):
         print '----------'
         for attr in plugin.attributes():
             print
-            print ' - %s (type: %s, default: %s)' % (attr.name, attr.type.__name__, attr.default)
+            print ' - %s (type: %s, default: %s)' % (attr.name, attr.type.__name__, attr.default is None and 'unset' or attr.default)
             if attr.doc:
                 for line in trim(attr.doc).splitlines():
                     print '   %s' % line.strip()
+        print
+        print 'Sample'
+        print '------'
+        print '[plugin:%s/0]' % name
+        for attr in plugin.attributes():
+            print attr.get_config()
 
     except:
         traceback.print_exc()
