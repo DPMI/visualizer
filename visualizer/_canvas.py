@@ -172,9 +172,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             for plugin, mod in self.plugins:
                 plugin.on_resize((w,h))
 
-                # rerender plugins with static content
-                if plugin.interval < 0:
-                    plugin.render()
+                # Force a rerender of plugin.
+                plugin.render()
 
     def realize(self, widget, event=None):
         with self.drawable():
