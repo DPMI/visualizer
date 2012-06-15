@@ -6,6 +6,13 @@ import traceback
 from OpenGL.GL import *
 from visualizer.picotime import picotime
 
+# metadata
+name = 'NPL Overview plugin'
+author = ('David Sveningsson', 'dsv@bth.se')
+date = '2011-08-16'
+version = 1
+api = 1
+
 parser = htmlcolor.Parser(factory=htmlcolor.FloatFactory, components=4)
 
 class UI(PluginUI):
@@ -38,7 +45,7 @@ class UI(PluginUI):
     def do_render(self):
         cr = self.cr
         font = self.font
-        
+
         self.clear(cr)
         cr.identity_matrix()
         cr.save()
@@ -57,11 +64,6 @@ class UI(PluginUI):
         cr.restore()
 
 class overview(Plugin):
-    name = 'NPL Overview plugin'
-    author = ('David Sveningsson', 'dsv@bth.se')
-    date = '2011-08-16'
-    version = 1
-    api = 1
     interval = 1
     dataset = ['overview']
 
@@ -96,7 +98,7 @@ class overview(Plugin):
             else:
                 ethernet['other'] += 1
                 continue
-        
+
         self.ui.set_ethernet(ethernet)
         self.ui.set_transport(transport)
 
@@ -120,6 +122,6 @@ def init_lut():
         for line in fp:
             line = line.strip()
             if len(line) == 0 or line[0] == '#': continue
-            parts = line.split('\t')
+            parts = line.split()
             proto_by_number[int(parts[1])] = parts[0]
 init_lut()

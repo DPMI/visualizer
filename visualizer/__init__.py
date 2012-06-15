@@ -12,8 +12,10 @@ import time
 from select import select
 import errno
 import socket
+import imp
 from functools import wraps
 from signal import signal, SIGUSR1, SIGINT, SIGHUP
+from glob import glob
 
 import consumer
 from _canvas import Canvas
@@ -257,6 +259,41 @@ class Main:
             self.cursor_timer = gobject.timeout_add(self.cursor_timeout, self.cursor_hide)
         self.visualizer.window.set_cursor(None)
 
+def plugin_usage(name):
+    info = imp.find_module(name, ['plugins'])
+    try:
+        mod = imp.load_module('_vis_usage_%s' % name, *info)
+        if not hasattr(mod, 'name'):
+            print 'No such plugin:', name
+        print mod.name
+    except:
+        traceback.print_exc()
+    finally:
+        info[0].close()
+
+def plugin_list():
+    all = []
+
+    for plugin in [os.path.splitext(os.path.basename(x))[0] for x in glob('plugins/*.py')]:
+        info = imp.find_module(plugin, ['plugins'])
+        try:
+            mod = imp.load_module('_vis_usage_%s' % plugin, *info)
+            if not hasattr(mod, 'name'): continue
+            all.append((plugin, mod.name))
+        except:
+            traceback.print_exc()
+        finally:
+            info[0].close()
+    return '\n'.join(['  - %s: %s' % x for x in all])
+
+def usage():
+    return """\
+Plugins:
+{plugin}
+
+For help about a specific plugin use -H NAME
+""".format(plugin=plugin_list())
+
 def run():
     print >> sys.stderr
     print >> sys.stderr, '#' * 60
@@ -265,16 +302,20 @@ def run():
     print >> sys.stderr, 'GNU GPLv3'
     print >> sys.stderr
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(epilog=usage(), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-f', '--config', type=argparse.FileType('r'), default=None, help='Configuration-file')
+    parser.add_argument('-H', dest='plugin', type=str, metavar='PLUGIN', help="Show help for plugin")
     args = parser.parse_args()
+
+    if args.plugin:
+        plugin_usage(args.plugin)
+        sys.exit(0)
 
     if not args.config:
         if not os.path.exists('visualizer.conf'):
             print >> sys.stderr, 'No config-file specified and "visualizer.conf" not found'
             sys.exit(1)
         args.config = open('visualizer.conf')
-
 
     # parse config
     config = ConfigParser()

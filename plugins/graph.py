@@ -11,6 +11,7 @@ import cairo
 import pango
 import math
 
+# metadata
 name = 'NPL Graph plugin'
 author = ('David Sveningsson', 'dsv@bth.se')
 date = '2011-09-29'
