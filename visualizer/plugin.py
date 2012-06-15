@@ -6,8 +6,9 @@ from threading import Lock
 from _cairo import CairoWidget as PluginUI
 
 class Attribute():
-    def __init__(self, name, type=None):
+    def __init__(self, name, doc, type=None):
         self.name = name
+        self.doc = doc
         self.type = type
 
     def __str__(self):
@@ -15,7 +16,7 @@ class Attribute():
 
 def attribute(*args, **kwargs):
     def wrapper(func):
-        func._attribute = Attribute(func.__name__, *args, **kwargs)
+        func._attribute = Attribute(func.__name__, func.__doc__, *args, **kwargs)
         return func
     return wrapper
 

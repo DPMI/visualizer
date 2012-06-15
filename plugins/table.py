@@ -31,27 +31,43 @@ class Table(Plugin, PluginUI):
         self._content = []
         self.dataset = []
         self.filter = None
-        
+
         self.area = self.pango.create_layout()
         self.area.set_font_description(self.font_b)
         self.area.set_width(int(self.size[0] * pango.SCALE))
 
     @attribute(type=str)
     def source(self, value):
+        """Data source.
+
+        Format: NAME;FILTER
+        where filter is "json" or "whitespace".
+        """
         [ds, flt] = value.split(':')
         self.dataset = [ds]
         self.filter = sys.modules[__name__].__dict__[flt]
 
     @attribute(type=str)
     def title(self, value):
+        """Table title"""
         self._title = value
 
     @attribute(type=str)
     def header(self, value):
+        """Column headers.
+
+        A semicolon separated list of column headers. Text is parsed
+        using pango markup.
+        """
         self._header = ['<b>%s</b>' % x for x in value.split(';')]
-    
+
     @attribute(type=str)
     def tabstop(self, value):
+        """Sets tabstops for columns.
+
+        A semicolon separated list of tab positions. If the position is prefixed
+        with a '+' sign it is relative to the previous position.
+        """
         v = value.split(';')
         t = pango.TabArray(len(v), True)
         c = 0
@@ -63,7 +79,7 @@ class Table(Plugin, PluginUI):
             c = x
             t.set_tab(i, pango.TAB_LEFT, x)
         self.area.set_tabs(t)
-        
+
     def on_resize(self, size):
         Plugin.on_resize(self, size)
         PluginUI.on_resize(self, size)
@@ -82,7 +98,7 @@ class Table(Plugin, PluginUI):
         self.text(self._title, self.font_a)
 
         cr.translate(0, 30)
-        
+
         text = '\n'.join(['\t'.join([str(y) for y in x]) for x in itertools.chain([self._header], self._content)])
         self.area.set_markup(text);
         self.pango.show_layout(self.area)
@@ -108,4 +124,4 @@ def factory(**kwargs):
         except:
             traceback.print_exc()
     return item
-    
+
