@@ -12,6 +12,9 @@ import threading
 from functools import wraps
 from OpenGL.GL import *
 from OpenGL.GLX import *
+from OpenGL.arrays import vbo
+import numpy
+from ctypes import c_void_p
 
 import consumer
 
@@ -56,6 +59,14 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect('expose_event',    self.expose)
         gobject.timeout_add(1000/50, self.expire)
         gobject.timeout_add(transition_time * 1000, self.transition)
+
+        # Create VBO
+        self.vbo = vbo.VBO(numpy.array([
+            [0, 0, 0, 0],
+            [0, 1, 0, 1],
+            [1, 1, 1, 1],
+            [1, 0, 1, 0],
+        ], GLfloat))
 
     def drawable(self):
         # this could be implemented in this class, but it is harder to understand "with self"
@@ -122,10 +133,13 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             glViewport (0, 0, widget.allocation.width, widget.allocation.height);
 
             # setup othogonal projection matrix with (0,0) in the upper left corner and with a size of 1x1
+            glMatrixMode(GL_PROJECTION)
             glLoadIdentity();
             glOrtho(0, 1, 0, 1, -1.0, 1.0);
             glScalef(1, -1, 1);
             glTranslated(0, -1, 0);
+            glMatrixMode(GL_MODELVIEW)
+            glLoadIdentity();
 
             # notify plugins of the new canvas size
             w = widget.allocation.width
@@ -195,37 +209,40 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                         plugin.render()
                     plugin._last_render = t
                 except:
-                    traceback.print_exc()
+                   traceback.print_exc()
 
             glViewport (0, 0, self.allocation.width, self.allocation.height)
             glClearColor(1,0,1,1)
             glClear(GL_COLOR_BUFFER_BIT)
 
+            glPushMatrix()
+            glLoadIdentity()
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+
+            glTranslate(0, offset, 0)
+            glScale(1, dy, 1)
+
+            self.vbo.bind()
+            glVertexPointer(2,   GL_FLOAT, 4*4, c_void_p(0))
+            glTexCoordPointer(2, GL_FLOAT, 4*4, c_void_p(2*4))
+
             for i, (plugin, mod) in enumerate(plugins):
-                if plugin is not None:
-                    plugin.bind()
-                    glColor(1,1,1,1)
-                else:
-                    glBindTexture(GL_TEXTURE_2D, 0)
-                    glColor(0,0,0,1)
+               if plugin is not None:
+                   plugin.bind()
+                   glColor(1,1,1,1)
+               else:
+                   glBindTexture(GL_TEXTURE_2D, 0)
+                   glColor(0,0,0,1)
 
-                real_y = y + offset
+               glDrawArrays(GL_QUADS, 0, 4)
+               glTranslate(0, 1, 0)
 
-                glBegin(GL_QUADS)
-                glTexCoord2f(0, 0)
-                glVertex3f(0, real_y, 0)
+            self.vbo.unbind()
 
-                glTexCoord2f(0, 1)
-                glVertex3f(0, real_y+dy, 0)
-
-                glTexCoord2f(1, 1)
-                glVertex3f(1, real_y+dy, 0)
-
-                glTexCoord2f(1, 0)
-                glVertex3f(1, real_y, 0)
-                glEnd()
-
-                y += dy
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+            glDisableClientState(GL_VERTEX_ARRAY)
+            glPopMatrix()
 
             if gldrawable.is_double_buffered():
                 gldrawable.swap_buffers()
