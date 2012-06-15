@@ -18,6 +18,7 @@ class Attribute():
         return '<Attribute %s>' % self.name
 
     def set(self, plugin, value):
+        if value is None: return # users cannot set None in config, None is passed if default is unset.
         self.func(plugin, value)
 
     def get_config(self):
