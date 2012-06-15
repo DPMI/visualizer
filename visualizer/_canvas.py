@@ -184,65 +184,67 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def expose(self, widget, event=None):
         self.render()
 
+    def render_plugins(self, plugins):
+        glViewport (0, 0, self.allocation.width, self.allocation.height / self.rows)
+
+        t = time.time()
+        for plugin, mod in self.plugins:
+            if plugin.interval < 0: # static content, only rendered when invalidated
+                continue
+
+            frac = 1.0 / plugin.interval
+
+            if t - plugin._last_render < frac:
+                continue
+
+            try:
+                with plugin:
+                    plugin.render()
+                    plugin._last_render = t
+            except:
+                traceback.print_exc()
+
+    def render_screen(self, plugins):
+        glViewport (0, 0, self.allocation.width, self.allocation.height)
+        glClearColor(1,0,1,1)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        glPushMatrix()
+        glLoadIdentity()
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+
+        offset = (-1.0 / self.rows) * min(self.transition_step, 1.0)
+        glTranslate(0, offset, 0)
+        glScale(1, 1.0 / self.rows, 1)
+
+        self.vbo.bind()
+        glVertexPointer(2,   GL_FLOAT, 4*4, c_void_p(0))
+        glTexCoordPointer(2, GL_FLOAT, 4*4, c_void_p(2*4))
+
+        for i, (plugin, mod) in enumerate(plugins):
+            if plugin is not None:
+                plugin.bind()
+                glColor(1,1,1,1)
+            else:
+                glBindTexture(GL_TEXTURE_2D, 0)
+                glColor(0,0,0,1)
+
+            glDrawArrays(GL_QUADS, 0, 4)
+            glTranslate(0, 1, 0)
+
+        self.vbo.unbind()
+
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+        glDisableClientState(GL_VERTEX_ARRAY)
+        glPopMatrix()
+
     def render(self):
         plugins = self.visible_plugins()
 
-        # yes, this is fugly, go make a VBO or something.
-        dy = 1.0 / self.rows
-        y = 0.0
-        offset = (-1.0 / self.rows) * min(self.transition_step, 1.0)
-        t = time.time()
-
         with self.drawable() as gldrawable:
-            glViewport (0, 0, self.allocation.width, self.allocation.height / self.rows)
-            for plugin, mod in self.plugins:
-                if plugin.interval < 0: # static content, only rendered when invalidated
-                    continue
-
-                frac = 1.0 / plugin.interval
-
-                if t - plugin._last_render < frac:
-                    continue
-
-                try:
-                    with plugin:
-                        plugin.render()
-                    plugin._last_render = t
-                except:
-                   traceback.print_exc()
-
-            glViewport (0, 0, self.allocation.width, self.allocation.height)
-            glClearColor(1,0,1,1)
-            glClear(GL_COLOR_BUFFER_BIT)
-
-            glPushMatrix()
-            glLoadIdentity()
-            glEnableClientState(GL_VERTEX_ARRAY)
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-
-            glTranslate(0, offset, 0)
-            glScale(1, dy, 1)
-
-            self.vbo.bind()
-            glVertexPointer(2,   GL_FLOAT, 4*4, c_void_p(0))
-            glTexCoordPointer(2, GL_FLOAT, 4*4, c_void_p(2*4))
-
-            for i, (plugin, mod) in enumerate(plugins):
-               if plugin is not None:
-                   plugin.bind()
-                   glColor(1,1,1,1)
-               else:
-                   glBindTexture(GL_TEXTURE_2D, 0)
-                   glColor(0,0,0,1)
-
-               glDrawArrays(GL_QUADS, 0, 4)
-               glTranslate(0, 1, 0)
-
-            self.vbo.unbind()
-
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-            glDisableClientState(GL_VERTEX_ARRAY)
-            glPopMatrix()
+            self.render_plugins(plugins)
+            self.render_screen(plugins)
 
             if gldrawable.is_double_buffered():
                 gldrawable.swap_buffers()
