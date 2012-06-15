@@ -60,14 +60,11 @@ class Main:
         self.notebook = builder.get_object('notebook1')
         self.cursor_timer = None
 
-        # ctrl+q shortcut
-        def quit(*args, **kwargs):
-            gtk.main_quit()
         gtk.accel_map_add_entry("<visualizer>/quit", gtk.accelerator_parse("q")[0], gtk.gdk.CONTROL_MASK)
         self.accel_group = gtk.AccelGroup()
-        self.accel_group.connect_by_path("<visualizer>/quit", quit)
+        self.accel_group.connect_by_path("<visualizer>/quit", self.quit)
         self.window.add_accel_group(self.accel_group)
-        signal(SIGINT, quit)
+        signal(SIGINT, self.handle_sigint)
 
         self.area = builder.get_object('area')
         gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
@@ -143,8 +140,14 @@ class Main:
     def reload(self, signum, frame):
         print 'herp derp, should reload config...'
 
-    def destroy(self, widget, data=None):
+    def handle_sigint(self, *args):
+        self.quit()
+
+    def quit(self, *args):
         gtk.main_quit()
+
+    def destroy(self, widget, data=None):
+        gtk.quit()
 
     def on_main_window_state_event(self, window, event):
         self.fullscreen = bool(gtk.gdk.WINDOW_STATE_FULLSCREEN & event.new_window_state)
