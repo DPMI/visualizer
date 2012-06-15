@@ -116,12 +116,5 @@ class Table(Plugin, PluginUI):
     def _generate_framebuffer(self, size):
         pass # do not want
 
-def factory(**kwargs):
-    item = Table()
-    for key, value in kwargs.items():
-        try:
-            getattr(item, key)(value)
-        except:
-            traceback.print_exc()
-    return item
+factory = Table
 

@@ -282,11 +282,6 @@ class Graph(Plugin, PluginUI):
     def _generate_framebuffer(self, size):
         pass # do not want
 
+factory = Graph
 def factory(**kwargs):
     item = Graph()
-    for key, value in kwargs.items():
-        try:
-            getattr(item, key)(value)
-        except:
-            traceback.print_exc()
-    return item

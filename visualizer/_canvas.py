@@ -111,8 +111,14 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 raise IOError, 'plugin "%s" does not define api' % name
 
             try:
-                plugin = mod.factory(**kwargs)
+                plugin = mod.factory()
                 plugin.on_resize((self.size[0], self.size[1] / self.rows))
+
+                for key, value in kwargs.items():
+                    try:
+                        getattr(plugin, key)(value)
+                    except:
+                        traceback.print_exc()
             except:
                 traceback.print_exc()
                 return
