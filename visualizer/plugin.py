@@ -6,10 +6,13 @@ from threading import Lock
 from _cairo import CairoWidget as PluginUI
 
 class Attribute():
-    def __init__(self, name, doc, type=None):
+    def __init__(self, name, doc, type=None, default=None):
         self.name = name
         self.doc = doc
         self.type = type
+        self.default = default
+        if self.default is None:
+            self.default = 'unset'
 
     def __str__(self):
         return '<Attribute %s>' % self.name

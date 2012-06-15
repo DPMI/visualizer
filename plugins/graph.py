@@ -78,6 +78,9 @@ class Graph(Plugin, PluginUI):
 
     @attribute(type=str)
     def xlines(self, value):
+        """Vertical helper lines.
+
+
         self._xlines = [float(x) for x in value.split(';')]
 
     @attribute(type=str)

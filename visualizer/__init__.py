@@ -304,7 +304,7 @@ def plugin_usage(name):
         print '----------'
         for attr in plugin.attributes():
             print
-            print ' - %s (type: %s)' % (attr.name, attr.type.__name__)
+            print ' - %s (type: %s, default: %s)' % (attr.name, attr.type.__name__, attr.default)
             if attr.doc:
                 for line in trim(attr.doc).splitlines():
                     print '   %s' % line.strip()
