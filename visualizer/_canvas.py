@@ -285,7 +285,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPopMatrix()
 
     def render_message(self):
-        if time.time() - self.msgwidget.time > 5.0: return
+        if time.time() - self.msgwidget.time > 7.0: return
 
         glPushMatrix()
         glLoadIdentity()
