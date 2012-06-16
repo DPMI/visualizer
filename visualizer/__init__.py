@@ -306,6 +306,8 @@ def plugin_usage(name):
             print 'No such plugin:', name
 
         print mod.name
+        print '-' * len(mod.name)
+        print trim(plugin.__doc__)
         print
         print 'Attributes'
         print '----------'
