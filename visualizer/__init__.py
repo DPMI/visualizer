@@ -52,10 +52,12 @@ class Main:
     cursor_timeout = 2000 # delay in ms until hiding cursor
     transition = 15
 
-    def __init__(self, config):
+    def __init__(self, config, filename):
         self.log = logging.getLogger('main')
         self.cursor_create()
         self.consumers = []
+        self.dataset = {}
+        self.filename = filename
 
         # config defaults
         self.transition = config.getint('general', 'transition', Main.transition)
@@ -136,7 +138,18 @@ class Main:
                 self.dataset[ds] = con
 
     def handle_sighup(self, signum, frame):
-        print 'herp derp, should reload config...'
+        self.log.info('Reloading config')
+        self.consumers = []
+        self.dataset = {}
+        self.visualizer.dataset = []
+        self.visualizer.plugins = []
+
+        config = ConfigParser()
+        config.read(self.filename)
+        self.parse_config(config)
+        self.load_dataset()
+        self.visualizer.dataset = self.dataset # fulhack
+        self.visualizer.init_plugins()
 
     def handle_sigint(self, *args):
         self.quit()
@@ -281,7 +294,7 @@ def run():
     print >> sys.stderr
 
     parser = argparse.ArgumentParser(epilog=usage(), formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-f', '--config', type=argparse.FileType('r'), default=None, help='Configuration-file')
+    parser.add_argument('-f', '--config', default=None, help='Configuration-file')
     parser.add_argument('-H', dest='plugin', type=str, metavar='PLUGIN', help="Show help for plugin")
     args = parser.parse_args()
 
@@ -308,11 +321,11 @@ def run():
         if not os.path.exists('visualizer.conf'):
             print >> sys.stderr, 'No config-file specified and "visualizer.conf" not found'
             sys.exit(1)
-        args.config = open('visualizer.conf')
+        args.config = 'visualizer.conf'
 
     # parse config
     config = ConfigParser()
-    config.readfp(args.config)
+    config.read(args.config)
 
     pidlock = config.get('general', 'lockfile', '/var/run/visualizer.lock')
     if os.path.exists(pidlock):
@@ -323,7 +336,7 @@ def run():
         pid.write(str(os.getpid()))
 
     try:
-        main = Main(config)
+        main = Main(config, filename=args.config)
         gtk.main()
     finally:
         os.unlink(pidlock)
