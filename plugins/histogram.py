@@ -29,7 +29,7 @@ class Histogram(Plugin, PluginUI):
     def __init__(self):
         Plugin.__init__(self)
         PluginUI.__init__(self, (1,1))
-        self._title = '<Unnamed histogram>'
+        self.title = None
         self.font_a = PluginUI.create_font(self.cr, size=16)
         self.font_b = PluginUI.create_font(self.cr, size=12)
         self.font_label = PluginUI.create_font(self.cr, size=10)
@@ -54,9 +54,9 @@ class Histogram(Plugin, PluginUI):
             self.dataset.append(ds)
             self.filter[ds] = sys.modules[__name__].__dict__[flt]
 
-    @attribute(type=str)
-    def title(self, value):
-        self._title = value
+    @attribute(type=str, default='Unnamed histogram')
+    def set_title(self, value):
+        self.title = value
 
     @attribute(type=str)
     def range(self, value):
@@ -90,7 +90,7 @@ class Histogram(Plugin, PluginUI):
         self.cr.save()
         self.cr.translate(5, 5)
         self.cr.set_source_rgba(0,0,0,1)
-        self.text("%s" % self._title, self.font_a, width=self.size[0])
+        self.text("%s" % self.title, self.font_a, width=self.size[0])
         self.cr.restore()
 
     def render_chart(self):
