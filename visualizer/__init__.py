@@ -103,11 +103,7 @@ class Main:
         self.parse_config(config)
 
         # retrieve datasets from consumers
-        self.dataset = {}
-        for con in self.consumers:
-            con.reconnect()
-            for ds in con.dataset:
-                self.dataset[ds] = con
+        self.load_dataset()
 
         if len(self.consumers) > 0:
             print 'Available consumers'
@@ -131,6 +127,13 @@ class Main:
         signal(SIGHUP, self.handle_sighup)
         signal(SIGINT, self.handle_sigint)
         gobject.idle_add(self.expire)
+
+    def load_dataset(self):
+        self.dataset = {}
+        for con in self.consumers:
+            con.reconnect()
+            for ds in con.dataset:
+                self.dataset[ds] = con
 
     def handle_sighup(self, signum, frame):
         print 'herp derp, should reload config...'
