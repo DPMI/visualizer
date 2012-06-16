@@ -124,4 +124,3 @@ class Table(Plugin, PluginUI):
         pass # do not want
 
 factory = Table
-
