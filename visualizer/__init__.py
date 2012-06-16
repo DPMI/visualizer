@@ -251,8 +251,8 @@ class Main:
                 print >> sys.stderr, 'Failed to parse section "%s", ignoring.' % section
                 continue
             ns, key, index = x.groups()
-            if ns is None:
-                ns = key
+            if ns is None: ns = key
+            if index is None: index = '0'
             a = self.parse_attrib(dict(config.items(section)))
 
             if ns == 'consumer':
@@ -264,10 +264,7 @@ class Main:
                 self.add_consumer(con)
 
             if ns == 'plugin':
-                try:
-                    self.visualizer.add_plugin(key, a)
-                except:
-                    traceback.print_exc()
+                self.visualizer.add_plugin(key, index, a)
 
 def trim(docstring):
     """Parse docstring. From python docs."""

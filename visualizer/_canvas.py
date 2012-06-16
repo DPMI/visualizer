@@ -76,43 +76,46 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         # this could be implemented in this class, but it is harder to understand "with self"
         return GLContext(self)
 
-    def add_plugin(self, name, kwargs):
+    def add_plugin(self, name, index, kwargs):
+        log = logging.getLogger('%s/%s' % (name, index))
+
         info = imp.find_module(name, ['plugins'])
         if info[0] == None:
-            raise IOError, 'No such plugin: %s' % name
+            log.error('No such plugin')
+            return
+
         try:
             mod = imp.load_module('_vis__%s' % name, *info)
 
             if not hasattr(mod, 'api'):
-                raise IOError, 'plugin "%s" does not define api' % name
+                log.error('Plugin does not define API')
 
-            try:
-                # Allocate new plugin
-                plugin = mod.factory()
-                plugin.on_resize((self.size[0], self.size[1] / self.rows))
-                attr_table = plugin.attributes()
+            # Allocate new plugin
+            plugin = mod.factory()
+            plugin.on_resize((self.size[0], self.size[1] / self.rows))
+            attr_table = plugin.attributes()
 
-                # Set all attributes
-                for attr in attr_table.values():
-                    v = kwargs.get(attr.name, attr.default)
-                    try:
-                        attr.set(plugin, v)
-                    except Exception, e:
-                        logging.getLogger(name).error('When setting attibute %s: %s', attr.name, e)
-                    try:
-                        del kwargs[attr.name]
-                    except:
-                        pass
+            # Set all attributes
+            for attr in attr_table.values():
+                v = kwargs.get(attr.name, attr.default)
+                try:
+                    attr.set(plugin, v)
+                except Exception, e:
+                    log.error('When setting attibute %s: %s', attr.name, e)
+                try:
+                    del kwargs[attr.name]
+                except:
+                    pass
 
-                # Warn about unused variables
-                for attr in kwargs.keys():
-                    logging.getLogger(name).warning('No such attribute: %s', attr)
-            except:
-                traceback.print_exc()
-                print >> sys.stderr, 'When trying to add plugin %s' % name
-                return
-            logging.getLogger('plugin').info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
+            # Warn about unused variables
+            for attr in kwargs.keys():
+                log.warning('No such attribute: %s', attr)
+
+            log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
             self.plugins.append((plugin,mod))
+        except:
+            traceback.print_exc()
+            print >> sys.stderr, 'When trying to add plugin %s' % name
         finally:
             info[0].close()
 
