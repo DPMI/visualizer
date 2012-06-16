@@ -137,11 +137,11 @@ class Main:
         self.visualizer.dataset = self.dataset # fulhack
         self.visualizer.init_plugins()
 
-        signal(SIGHUP, self.reload)
+        signal(SIGHUP, self.handle_sighup)
         signal(SIGINT, self.handle_sigint)
         gobject.idle_add(self.expire)
 
-    def reload(self, signum, frame):
+    def handle_sighup(self, signum, frame):
         print 'herp derp, should reload config...'
 
     def handle_sigint(self, *args):
