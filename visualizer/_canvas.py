@@ -39,7 +39,7 @@ class GLContext:
         return False # exceptions should propagate
 
 class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
-    def __init__(self, config, size, transition_time=15):
+    def __init__(self, size, transition_time=15):
         gtk.DrawingArea.__init__(self)
 
         self.size = size
@@ -52,7 +52,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.transition_enabled = False # @note should make a FSM
 
         # widget setup
-        self.set_gl_capability(config)
+        self.set_gl_capability(gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE))
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK|gtk.gdk.POINTER_MOTION_MASK)
         self.set_size_request(size[0], size[1])
 

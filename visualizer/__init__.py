@@ -84,8 +84,7 @@ class Main:
 
         # setup visualizer
         self.log.debug('Creating canvas')
-        gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
-        self.visualizer = Canvas(gl_config, size=size, transition_time=self.transition)
+        self.visualizer = Canvas(size=size, transition_time=self.transition)
         self.visualizer.connect('motion_notify_event', self.cursor_show)
         self.area.pack_start(self.visualizer)
         self.window.show_all()
