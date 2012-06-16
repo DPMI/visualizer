@@ -71,13 +71,8 @@ class Main:
 
         # config defaults
         self.transition = config.getint('general', 'transition', Main.transition)
+        self.fullscreen = config.getboolean('general', 'fullscreen', False)
         self.consumers = []
-
-        self.fullscreen = False
-        try:
-            self.fullscreen = config.getboolean('general', 'fullscreen')
-        except:
-            pass
 
         # cursor
         pix = gtk.gdk.Pixmap(None, 1, 1, 1)
