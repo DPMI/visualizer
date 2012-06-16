@@ -65,7 +65,6 @@ class Main:
         self.accel_group = gtk.AccelGroup()
         self.accel_group.connect_by_path("<visualizer>/quit", self.quit)
         self.window.add_accel_group(self.accel_group)
-        signal(SIGINT, self.handle_sigint)
 
         self.area = builder.get_object('area')
         gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
@@ -139,6 +138,7 @@ class Main:
         self.visualizer.init_plugins()
 
         signal(SIGHUP, self.reload)
+        signal(SIGINT, self.handle_sigint)
         gobject.idle_add(self.expire)
 
     def reload(self, signum, frame):
