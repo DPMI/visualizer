@@ -92,6 +92,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
             # Allocate new plugin
             plugin = mod.factory()
+            plugin.log = log
             plugin.on_resize((self.size[0], self.size[1] / self.rows))
             attr_table = plugin.attributes()
 
@@ -109,9 +110,9 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
             # Warn about unused variables
             for attr in kwargs.keys():
-                log.warning('No such attribute: %s', attr)
+                plugin.log.warning('No such attribute: %s', attr)
 
-            log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
+            plugin.log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
             self.plugins.append((plugin,mod))
         except:
             traceback.print_exc()
@@ -127,13 +128,15 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             req = getattr(plugin, 'dataset', [])
             for ds in req:
                 if not ds in self.dataset:
-                    raise RuntimeError, 'Plugin "%s" requires dataset "%s" which is not available' % (name, ds)
+                    plugin.log.error('Requires dataset "%s" which is not available', ds)
+                    return
                 func = plugin.on_data
                 try:
                     self.dataset[ds].subscribe(ds, func)
                 except Exception, e:
                     traceback.print_exc()
-                    raise RuntimeError, 'Plugin "%s" requires dataset "%s" but consumer refused subscription: %s' % (name, ds, str(e))
+                    plugin.log.error('Requires dataset "%s" but consumer refused subscription: %s', ds, str(e))
+                    return
 
     def configure(self, widget, event=None):
         with self.drawable():
