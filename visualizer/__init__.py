@@ -244,7 +244,7 @@ class Main:
         return d
 
     def parse_config(self, config):
-        pattern = re.compile('(\w+:)?(\w+)(?:/(\w+))?')
+        pattern = re.compile('(?:(\w+):)?(\w+)(?:/(\w+))?')
         for section in config.sections():
             x = pattern.match(section)
             if x is None:
@@ -253,8 +253,6 @@ class Main:
             ns, key, index = x.groups()
             if ns is None:
                 ns = key
-            else:
-                ns = ns[:-1] # strip trailing ':'
             a = self.parse_attrib(dict(config.items(section)))
 
             if ns == 'consumer':
