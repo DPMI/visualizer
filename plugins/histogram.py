@@ -17,9 +17,12 @@ date = '2012-05-31'
 version = 1
 api = 1
 
-def csv_filter(value):
+def csv(value):
     for line in value.splitlines():
         yield tuple([float(x.strip('\x00')) for x in line.split(';')])
+
+def extract(value, index):
+    return value[index]
 
 clamp = lambda v,a,b: min(max(v,a),b)
 
@@ -45,10 +48,10 @@ class Histogram(Plugin, PluginUI):
         # chart margins
         self.margin = [30, 5, 60, 30] # top right bottom left
 
-    @attribute(type=str, sample="NAME:csv_filter")
+    @attribute(type=str, sample="NAME:csv:extract(2)")
     def source(self, value):
         """Datasource for histogram.
-        Format: DATASET:FILTER"""
+        Format: DATASET:FILTER..."""
         for pair in value.split(';'):
             [ds, flt] = pair.split(':')
             self.dataset.append(ds)
