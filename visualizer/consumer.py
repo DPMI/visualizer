@@ -16,7 +16,7 @@ fifo_log = logging.getLogger('fifo')
 
 class Consumer(object):
     def __init__(self, host, port):
-        self.peer = (host,port)
+        self.peer = (host,int(port))
         self.sock = None
         self.sockerr = None
         self.subscriptions = set()
