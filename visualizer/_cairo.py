@@ -27,7 +27,6 @@ class CairoWidget:
         stride = self.width * bpp
         self.surface = cairo.ImageSurface.create_for_data(self._data, self._format, self.width, self.height, stride)
         self._texture = glGenTextures(1);
-
         self.cr = cairo.Context(self.surface)
         self.pango = pangocairo.CairoContext(self.cr)
         self.layout = self.pango.create_layout()

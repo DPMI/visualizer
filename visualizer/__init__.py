@@ -150,6 +150,7 @@ class Main:
         self.load_dataset()
         self.visualizer.dataset = self.dataset # fulhack
         self.visualizer.init_plugins()
+        self.visualizer.write_message('Reloaded config')
 
     def handle_sigint(self, *args):
         self.quit()

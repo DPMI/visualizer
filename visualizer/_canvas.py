@@ -18,6 +18,30 @@ import numpy
 from ctypes import c_void_p
 
 import consumer
+from _cairo import CairoWidget
+
+class MessageWidget(CairoWidget):
+    def __init__(self, size):
+        CairoWidget.__init__(self, size)
+        self.font = self.create_font('Monospace', size=32)
+        self.message = ''
+        self.invalidate()
+        self.time = 0
+
+    def write(self, text):
+        self.message = text
+        self.time = time.time()
+        self.invalidate()
+
+    def do_render(self):
+        self.clear((0,0,0,0))
+        self.cr.save()
+        self.cr.set_source_rgba(0.1, 0.1, 0.5, 0.85)
+        self.cr.rectangle(0, 0, 10 + 26.5 * len(self.message), self.size[1])
+        self.cr.fill()
+        self.cr.translate(5,10)
+        self.text(self.message, font=self.font, color=(1,1,1,1))
+        self.cr.restore()
 
 class GLContext:
     def __init__(self, widget):
@@ -50,6 +74,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.frames = 0
         self.transition_step = 0.0
         self.transition_enabled = False # @note should make a FSM
+        self.msgwidget = None
 
         # widget setup
         self.set_gl_capability(gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE))
@@ -168,6 +193,9 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             glEnable(GL_BLEND)
             glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
+            # Create widget for displaying messages'
+            self.msgwidget = MessageWidget(size=(self.size[0], 70))
+
     def expire(self):
         if self.transition_enabled:
             self.transition_action()
@@ -200,6 +228,9 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def expose(self, widget, event=None):
         self.render()
 
+    def write_message(self, text):
+        self.msgwidget.write(text)
+
     def render_plugins(self, plugins):
         glViewport (0, 0, self.allocation.width, self.allocation.height / self.rows)
 
@@ -227,16 +258,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         glPushMatrix()
         glLoadIdentity()
-        glEnableClientState(GL_VERTEX_ARRAY)
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
         offset = (-1.0 / self.rows) * min(self.transition_step, 1.0)
         glTranslate(0, offset, 0)
         glScale(1, 1.0 / self.rows, 1)
-
-        self.vbo.bind()
-        glVertexPointer(2,   GL_FLOAT, 4*4, c_void_p(0))
-        glTexCoordPointer(2, GL_FLOAT, 4*4, c_void_p(2*4))
 
         for i, (plugin, mod) in enumerate(plugins):
             if plugin is not None:
@@ -249,10 +274,21 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             glDrawArrays(GL_QUADS, 0, 4)
             glTranslate(0, 1, 0)
 
-        self.vbo.unbind()
+        glPopMatrix()
 
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-        glDisableClientState(GL_VERTEX_ARRAY)
+    def render_message(self):
+        if time.time() - self.msgwidget.time > 5.0: return
+
+        glPushMatrix()
+        glLoadIdentity()
+
+        glColor(1,1,1,1)
+        glTranslate(1.0 / 50, 1.0 / 50, 0)
+        glScale(float(self.msgwidget.size[0]) / self.size[0], float(self.msgwidget.size[1]) / self.size[1], 1)
+        self.msgwidget.render()
+        self.msgwidget.bind_texture()
+        glDrawArrays(GL_QUADS, 0, 4)
+
         glPopMatrix()
 
     def render(self):
@@ -261,7 +297,19 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         with self.drawable() as gldrawable:
             self.render_plugins(plugins)
+
+            self.vbo.bind()
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+            glVertexPointer(2,   GL_FLOAT, 4*4, c_void_p(0))
+            glTexCoordPointer(2, GL_FLOAT, 4*4, c_void_p(2*4))
+
             self.render_screen(plugins)
+            self.render_message()
+
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+            glDisableClientState(GL_VERTEX_ARRAY)
+            self.vbo.unbind()
 
             if gldrawable.is_double_buffered():
                 gldrawable.swap_buffers()
