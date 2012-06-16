@@ -17,6 +17,13 @@ def whitespace(value):
     return [value.split()]
 
 class Table(Plugin, PluginUI):
+    """Displays tabular data.
+
+    Each set of data represents a full table, e.g. a json-encoded list of lists.
+    Number of columns is dynamically adjusted.
+
+    """
+
     interval = 1
 
     def __init__(self):
@@ -36,7 +43,7 @@ class Table(Plugin, PluginUI):
         self.area.set_font_description(self.font_b)
         self.area.set_width(int(self.size[0] * pango.SCALE))
 
-    @attribute(type=str)
+    @attribute(type=str, sample="NAME;json")
     def source(self, value):
         """Data source.
 
@@ -49,19 +56,19 @@ class Table(Plugin, PluginUI):
 
     @attribute(name='title', type=str, default='Unnamed table')
     def set_title(self, value):
-        """Table title"""
+        """Table title."""
         self.title = value
 
-    @attribute(type=str)
+    @attribute(type=str, sample="Key;Value")
     def header(self, value):
         """Column headers.
 
         A semicolon separated list of column headers. Text is parsed
-        using pango markup.
+        using pango markup. If unset no headers will be displayed.
         """
         self._header = ['<b>%s</b>' % x for x in value.split(';')]
 
-    @attribute(type=str)
+    @attribute(type=str, sample="0;+50;+50")
     def tabstop(self, value):
         """Sets tabstops for columns.
 
