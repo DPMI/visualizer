@@ -55,25 +55,25 @@ class Main:
     def __init__(self, config):
         self.log = logging.getLogger('main')
         self.cursor_create()
+        self.consumers = []
 
+        # config defaults
+        self.transition = config.getint('general', 'transition', Main.transition)
+        self.fullscreen = config.getboolean('general', 'fullscreen', False)
+
+        # Create window and get widget handles.
         builder = gtk.Builder()
         builder.add_from_file(join(dirname(__file__),'main.ui'))
         builder.connect_signals(self)
         self.window = builder.get_object('main')
         self.notebook = builder.get_object('notebook1')
+        self.area = builder.get_object('area')
 
+        # Setup keyboard shortcuts
         gtk.accel_map_add_entry("<visualizer>/quit", gtk.accelerator_parse("q")[0], gtk.gdk.CONTROL_MASK)
         self.accel_group = gtk.AccelGroup()
         self.accel_group.connect_by_path("<visualizer>/quit", self.quit)
         self.window.add_accel_group(self.accel_group)
-
-        self.area = builder.get_object('area')
-        gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
-
-        # config defaults
-        self.transition = config.getint('general', 'transition', Main.transition)
-        self.fullscreen = config.getboolean('general', 'fullscreen', False)
-        self.consumers = []
 
         # guess resolution
         size = (800,600)
@@ -84,11 +84,11 @@ class Main:
 
         # setup visualizer
         self.log.debug('Creating canvas')
+        gl_config = gtk.gdkgl.Config(mode=gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
         self.visualizer = Canvas(gl_config, size=size, transition_time=self.transition)
         self.visualizer.connect('motion_notify_event', self.cursor_show)
         self.area.pack_start(self.visualizer)
         self.window.show_all()
-
         if self.fullscreen:
             self.window.fullscreen()
             self.notebook.set_show_tabs(False)
@@ -128,6 +128,7 @@ class Main:
         self.visualizer.dataset = self.dataset # fulhack
         self.visualizer.init_plugins()
 
+        # Setup signal and event handling
         signal(SIGHUP, self.handle_sighup)
         signal(SIGINT, self.handle_sigint)
         gobject.idle_add(self.expire)
