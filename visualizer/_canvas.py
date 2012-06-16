@@ -195,14 +195,14 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 # Force a rerender of plugin.
                 plugin.render()
 
+            # Create widget for displaying messages'
+            self.msgwidget = MessageWidget(size=(self.size[0], 70))
+
     def realize(self, widget, event=None):
         with self.drawable():
             glEnable(GL_TEXTURE_2D)
             glEnable(GL_BLEND)
             glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-            # Create widget for displaying messages'
-            self.msgwidget = MessageWidget(size=(self.size[0], 70))
 
     def expire(self):
         if self.transition_enabled:
