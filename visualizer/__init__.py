@@ -201,8 +201,10 @@ class Main:
                 except socket.error:
                     traceback.print_exc()
                     con.sock = None
-                except:
+                    self.visualizer.write_message('Lost connection to %s' % con)
+                except Exception, e:
                     traceback.print_exc()
+                    self.visualizer.write_message('%s: %s' % (con, e))
 
             # try to reconnect disconnected consumers
             for con in [x for x in self.consumers if x.fileno() is None]:
