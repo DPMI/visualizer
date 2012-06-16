@@ -131,7 +131,7 @@ class Main:
     def load_dataset(self):
         self.dataset = {}
         for con in self.consumers:
-            con.reconnect()
+            con.connect()
             for ds in con.dataset:
                 self.dataset[ds] = con
 
