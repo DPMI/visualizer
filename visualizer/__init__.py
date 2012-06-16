@@ -274,7 +274,7 @@ class Main:
                 self.add_consumer(con)
 
             if ns == 'process':
-                con = consumer.Process(a['command'], a['dataset'])
+                con = consumer.Process(a['command'], a['dataset'], index)
                 self.add_consumer(con)
 
             if ns == 'plugin':
