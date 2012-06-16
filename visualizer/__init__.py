@@ -270,7 +270,7 @@ class Main:
             a = self.parse_attrib(dict(config.items(section)))
 
             if ns == 'consumer':
-                con = consumer.Consumer(a['host'], a['port'])
+                con = consumer.Consumer(a['host'], a['port'], index)
                 self.add_consumer(con)
 
             if ns == 'process':

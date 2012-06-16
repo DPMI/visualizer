@@ -15,7 +15,7 @@ consumer_log = logging.getLogger('consumer')
 fifo_log = logging.getLogger('fifo')
 
 class Consumer(object):
-    def __init__(self, host, port):
+    def __init__(self, host, port, index):
         self.peer = (host,int(port))
         self.sock = None
         self.sockerr = None
@@ -24,12 +24,15 @@ class Consumer(object):
         self.callback = {}
         self.dataset = {}
 
+        self.log = logging.getLogger('consumer/%s' % str(index))
+
     def __str__(self):
         state = self.sock is not None and "connected" or ("disconnected: %s" % self.sockerr)
         tmp = self.peer + (state,)
         return '<Consumer %s:%d (%s)>' % tmp
 
     def connect(self):
+        self.log.info('Connecting to %s:%d"', *self.peer)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             sock.connect(self.peer)
@@ -41,6 +44,8 @@ class Consumer(object):
         payload = self.get('/info').get_payload()
         info = json.loads(payload)
         self.dataset = info['dataset']
+        for ds in self.dataset:
+            self.log.info('Dataset "%s" is available', ds)
 
     def reconnect(self):
         if time.time() - self._stamp < 60:
@@ -80,6 +85,7 @@ class Consumer(object):
         raw = self.sock.recv(header.size)
 
         if raw == '':
+            self.log.info('Lost connection to %s:%d"', *self.peer)
             raise socket.error, 'socket shutdown'
 
         size, name = header.unpack(raw)
@@ -101,6 +107,7 @@ class Consumer(object):
         result = result.split(' ')
 
         if int(result[1]) != 200:
+            self.log.info('Request failed:', ' '.join(result))
             raise httplib.BadStatusLine(' '.join(result))
 
         response = FeedParser()
