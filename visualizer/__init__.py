@@ -54,12 +54,13 @@ class Main:
 
     def __init__(self, config):
         self.log = logging.getLogger('main')
+        self.cursor_create()
+
         builder = gtk.Builder()
         builder.add_from_file(join(dirname(__file__),'main.ui'))
         builder.connect_signals(self)
         self.window = builder.get_object('main')
         self.notebook = builder.get_object('notebook1')
-        self.cursor_timer = None
 
         gtk.accel_map_add_entry("<visualizer>/quit", gtk.accelerator_parse("q")[0], gtk.gdk.CONTROL_MASK)
         self.accel_group = gtk.AccelGroup()
@@ -73,11 +74,6 @@ class Main:
         self.transition = config.getint('general', 'transition', Main.transition)
         self.fullscreen = config.getboolean('general', 'fullscreen', False)
         self.consumers = []
-
-        # cursor
-        pix = gtk.gdk.Pixmap(None, 1, 1, 1)
-        color = gtk.gdk.Color()
-        self.cursor = gtk.gdk.Cursor(pix, pix, color, color, 0, 0)
 
         # guess resolution
         size = (800,600)
@@ -199,6 +195,12 @@ class Main:
             traceback.print_exc()
         finally:
             return True
+
+    def cursor_create(self):
+        pix = gtk.gdk.Pixmap(None, 1, 1, 1)
+        color = gtk.gdk.Color()
+        self.cursor_timer = None
+        self.cursor = gtk.gdk.Cursor(pix, pix, color, color, 0, 0)
 
     def cursor_hide(self):
         if not self.fullscreen:
