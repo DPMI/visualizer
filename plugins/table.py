@@ -34,8 +34,8 @@ class Table(Plugin, PluginUI):
         self.font_b = PluginUI.create_font(self.cr, size=12)
 
         self.title = None
-        self._header = []
-        self._content = []
+        self.header = []
+        self.content = []
         self.dataset = []
         self.filter = None
 
@@ -59,21 +59,21 @@ class Table(Plugin, PluginUI):
         """Table title."""
         self.title = value
 
-    @attribute(type=str, sample="Key;Value")
-    def header(self, value):
+    @attribute(name="header", type=str, sample="Key;Value")
+    def set_header(self, value):
         """Column headers.
 
         A semicolon separated list of column headers. Text is parsed
         using pango markup. If unset no headers will be displayed.
         """
-        self._header = ['<b>%s</b>' % x for x in value.split(';')]
+        self.header = ['<b>%s</b>' % x for x in value.split(';')]
 
     @attribute(type=str, sample="0;+50;+50")
     def tabstop(self, value):
         """Sets tabstops for columns.
 
-        A semicolon separated list of tab positions. If the position is prefixed
-        with a '+' sign it is relative to the previous position.
+        A semicolon separated list of tab positions (in pixels). If the position
+        is prefixed with a '+' sign it is relative to the previous position.
         """
         v = value.split(';')
         t = pango.TabArray(len(v), True)
@@ -93,7 +93,7 @@ class Table(Plugin, PluginUI):
         self.area.set_width(int(self.size[0] * pango.SCALE))
 
     def on_data(self, ds, data):
-        self._content = self.filter(data)
+        self.content = self.filter(data)
 
     # cairo
     def do_render(self):
@@ -106,7 +106,7 @@ class Table(Plugin, PluginUI):
 
         cr.translate(0, 30)
 
-        text = '\n'.join(['\t'.join([str(y) for y in x]) for x in itertools.chain([self._header], self._content)])
+        text = '\n'.join(['\t'.join([str(y) for y in x]) for x in itertools.chain([self.header], self.content)])
         self.area.set_markup(text);
         self.pango.show_layout(self.area)
 
