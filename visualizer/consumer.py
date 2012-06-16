@@ -59,12 +59,18 @@ class Consumer(object):
         return self.request('GET %s HTTP/1.1' % path, headers)
 
     def subscribe(self, dataset, callback):
+        # store callback
+        if callback is not None:
+            self.callback[dataset] = self.callback.get(dataset,[]) + [callback]
+
+        # check if we are already subscribed
+        if dataset in self.subscriptions: return True
+
+        # make new subscription
         headers = {
             'Accept': 'application/json',
             'Host': self.peer[0]
         }
-        if callback is not None:
-            self.callback[dataset] = self.callback.get(dataset,[]) + [callback]
         result = self.request('SUBSCRIBE /dataset/%s HTTP/1.1' % dataset, headers)
         self.subscriptions.add(dataset)
         return result
