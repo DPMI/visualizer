@@ -248,7 +248,7 @@ class Main:
         for section in config.sections():
             x = pattern.match(section)
             if x is None:
-                print >> sys.stderr, 'Failed to parse section "%s", ignoring.' % section
+                self.log.error('Failed to parse section "%s", ignoring.', section)
                 continue
             ns, key, index = x.groups()
             if ns is None: ns = key
