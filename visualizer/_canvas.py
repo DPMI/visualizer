@@ -21,6 +21,14 @@ import consumer
 from _cairo import CairoWidget
 
 class MessageWidget(CairoWidget):
+    html_escape_table = {
+        "&": "&amp;",
+        '"': "&quot;",
+        "'": "&apos;",
+        ">": "&gt;",
+        "<": "&lt;",
+        }
+
     def __init__(self, size):
         CairoWidget.__init__(self, size)
         self.font = self.create_font('Monospace', size=32)
@@ -29,7 +37,7 @@ class MessageWidget(CairoWidget):
         self.time = 0
 
     def write(self, text):
-        self.message = text
+        self.message = ''.join(self.html_escape_table.get(c,c) for c in text)
         self.time = time.time()
         self.invalidate()
 
