@@ -38,14 +38,14 @@ class Histogram(Plugin, PluginUI):
         self.data = numpy.array([0]*100, numpy.float)
         self.n_samples = 100
         self.pos = 0
-        self.value_range = (0,0)
+        self.value_range = None
         self.num_bins = 1
         self.fill_color = (1,1,1,1)
 
         # chart margins
         self.margin = [30, 5, 60, 30] # top right bottom left
 
-    @attribute(type=str)
+    @attribute(type=str, sample="NAME:csv_filter")
     def source(self, value):
         """Datasource for histogram.
         Format: DATASET:FILTER"""
@@ -54,26 +54,37 @@ class Histogram(Plugin, PluginUI):
             self.dataset.append(ds)
             self.filter[ds] = sys.modules[__name__].__dict__[flt]
 
-    @attribute(type=str, default='Unnamed histogram')
+    @attribute(name="title", type=str, default='Unnamed histogram')
     def set_title(self, value):
+        """Title of histogram"""
         self.title = value
 
-    @attribute(type=str)
+    @attribute(type=str, default="0:100")
     def range(self, value):
+        """Expected range of values.
+
+        Values outside range will be clamped to fit.
+        """
         self.value_range = tuple([float(x) for x in value.split(':')])
 
-    @attribute(type=int)
+    @attribute(type=int, default="1000")
     def samples(self, value):
+        """Number of samples to save."""
         self.data = numpy.array([0]*int(value), numpy.float)
         self.n_samples = int(value)
         self.pos = 0
 
-    @attribute(type=int)
+    @attribute(type=int, default="25")
     def bins(self, value):
+        """Number of bins to store values in."""
         self.num_bins = int(value)
 
-    @attribute(type=color)
+    @attribute(type=color, sample="(1,0,0,1)")
     def fill(self, value):
+        """Fill bars with color.
+
+        If set bars will be filled with the specified color.
+        """
         self.fill_color = eval(value)
 
     def on_data(self, dataset, raw):
