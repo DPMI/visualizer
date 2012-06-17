@@ -135,9 +135,13 @@ class Process:
         return self.proc.stdout.fileno()
 
     def connect(self):
-        self.proc = subprocess.Popen(self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        self.log.info('Opened process %d as "%s"', self.proc.pid, ' '.join(self.command))
-        self.log.info('Dataset "%s" is available', self.dataset[0])
+        try:
+            self.proc = subprocess.Popen(self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.log.info('Opened process %d as "%s"', self.proc.pid, ' '.join(self.command))
+            self.log.info('Dataset "%s" is available', self.dataset[0])
+        except Exception, e:
+            traceback.print_exc()
+            self.log.info('Failed to execute "%s": %s', ' '.join(self.command), str(e))
 
     def reconnect(self):
         self.connect()
