@@ -10,6 +10,7 @@ import numpy
 import cairo
 import pango
 import math
+import functools
 
 name = 'NPL Histogram plugin'
 author = ('David Sveningsson', 'dsv@bth.se')
@@ -21,8 +22,8 @@ def csv(value):
     for line in value.splitlines():
         yield tuple([float(x.strip('\x00')) for x in line.split(';')])
 
-def extract(value, index):
-    return value[index]
+def extract(index, value):
+    yield value[index]
 
 clamp = lambda v,a,b: min(max(v,a),b)
 
@@ -53,9 +54,42 @@ class Histogram(Plugin, PluginUI):
         """Datasource for histogram.
         Format: DATASET:FILTER..."""
         for pair in value.split(';'):
-            [ds, flt] = pair.split(':')
+            p = pair.split(':')
+            ds = p[0]
             self.dataset.append(ds)
-            self.filter[ds] = sys.modules[__name__].__dict__[flt]
+
+            flt = []
+            for func in p[1:]:
+                args = None
+                if '(' in func:
+                    i = func.index('(')
+                    args = eval(func[i:])
+                    if not isinstance(args,tuple): args = (args,) # happens when there is only a single arg
+                    func = func[:i]
+
+                func = sys.modules[__name__].__dict__[func]
+                if args:
+                    func = functools.partial(func, *args)
+                flt.append(func)
+
+            def pipe(value, *args):
+                func = args[0]
+                for next in func(value):
+                    if len(args) == 1:
+                        yield next
+                    else:
+                        for y in pipe(next, *args[1:]):
+                            yield y
+
+            print flt
+            filter = lambda x: pipe(x, *flt)
+            t = list(filter("1;2"))
+            print 'test', t
+
+            self.filter[ds] = filter
+
+
+            print self.filter
 
     @attribute(name="title", type=str, default='Unnamed histogram')
     def set_title(self, value):
@@ -92,7 +126,7 @@ class Histogram(Plugin, PluginUI):
 
     def on_data(self, dataset, raw):
         flt = self.filter[dataset]
-        for timestamp, value in flt(raw):
+        for value in flt(raw):
             # clamp to y-axis range.
             value = clamp(value, self.value_range[0], self.value_range[1])
 
