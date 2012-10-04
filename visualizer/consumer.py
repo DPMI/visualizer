@@ -57,6 +57,9 @@ class Consumer(object):
         for x in self.subscriptions:
             self.subscribe(x, None)
 
+    def disable(self):
+        self.sock = None
+
     def get(self, path):
         headers = {
             'Accept': 'application/json',
