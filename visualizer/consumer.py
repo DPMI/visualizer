@@ -9,6 +9,7 @@ import struct
 import time
 import subprocess
 import shlex
+import errno
 import logging
 
 consumer_log = logging.getLogger('consumer')
@@ -81,8 +82,15 @@ class Consumer(object):
         return result
 
     def pull(self):
-        header = struct.Struct('!I64s')
-        raw = self.sock.recv(header.size)
+        self.sock.setblocking(False)
+        try:
+            header = struct.Struct('!I64s')
+            raw = self.sock.recv(header.size)
+        except socket.error, e:
+            if e.errno == errno.EWOULDBLOCK:
+                return
+            raise
+        self.sock.setblocking(True)
 
         if raw == '':
             self.log.info('Lost connection to %s:%d"', *self.peer)
