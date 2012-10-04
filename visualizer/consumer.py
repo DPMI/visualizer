@@ -11,6 +11,7 @@ import subprocess
 import shlex
 import errno
 import logging
+from select import select
 
 consumer_log = logging.getLogger('consumer')
 fifo_log = logging.getLogger('fifo')
@@ -84,17 +85,9 @@ class Consumer(object):
         self.subscriptions.add(dataset)
         return result
 
-    def pull(self):
-        self.sock.setblocking(False)
-        try:
-            header = struct.Struct('!I64s')
-            raw = self.sock.recv(header.size)
-        except socket.error, e:
-            if e.errno == errno.EWOULDBLOCK:
-                return
-            raise
-        self.sock.setblocking(True)
-
+    def read_header(self):
+        header = struct.Struct('!I64s')
+        raw = self.sock.recv(header.size)
         if raw == '':
             self.log.info('Lost connection to %s:%d"', *self.peer)
             raise socket.error, 'socket shutdown'
@@ -104,9 +97,19 @@ class Consumer(object):
         except:
             traceback.print_exc()
             print >> sys.stderr, 'when unpacking', [raw]
-            return
+            return None, None
 
         name = name.rstrip('\x00')
+        return size, name
+
+    def pull(self):
+        rdlist, _, _ = select([self.sock], [], [], 0)
+        if self.sock not in rdlist:
+            return
+
+        size, name = self.read_header()
+        if size is None: return # happens if it fails to read header
+
         data = self.sock.recv(size)
         for func in self.callback.get(name,[]):
             func(name, data)
