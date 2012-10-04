@@ -99,7 +99,13 @@ class Consumer(object):
             self.log.info('Lost connection to %s:%d"', *self.peer)
             raise socket.error, 'socket shutdown'
 
-        size, name = header.unpack(raw)
+        try:
+            size, name = header.unpack(raw)
+        except:
+            traceback.print_exc()
+            print >> sys.stderr, 'when unpacking', [raw]
+            return
+
         name = name.rstrip('\x00')
         data = self.sock.recv(size)
         for func in self.callback.get(name,[]):
