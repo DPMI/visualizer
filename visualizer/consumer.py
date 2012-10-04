@@ -33,11 +33,12 @@ class Consumer(object):
         return '<Consumer %s:%d (%s)>' % tmp
 
     def connect(self):
-        self.log.info('Connecting to %s:%d"', *self.peer)
+        self.log.info('Connecting to %s:%d', *self.peer)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             sock.connect(self.peer)
         except socket.error, e:
+            self.log.info('Failed to connect to %s:%d', *self.peer)
             self.sockerr = e.strerror
             raise
         self.sock = sock
@@ -52,7 +53,6 @@ class Consumer(object):
         if time.time() - self._stamp < 60:
             return
         self._stamp = time.time()
-        print >> sys.stderr, 'Reconnecting to %s:%d' % self.peer
         self.connect()
         for x in self.subscriptions:
             self.subscribe(x, None)

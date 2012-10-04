@@ -133,7 +133,10 @@ class Main:
     def load_dataset(self):
         self.dataset = {}
         for con in self.consumers:
-            con.connect()
+            try:
+                con.connect()
+            except:
+                pass
             for ds in con.dataset:
                 self.dataset[ds] = con
 
@@ -208,7 +211,10 @@ class Main:
 
             # try to reconnect disconnected consumers
             for con in [x for x in self.consumers if x.fileno() is None]:
-                con.reconnect()
+                try:
+                    con.reconnect()
+                except:
+                    pass
 
         except:
             traceback.print_exc()
