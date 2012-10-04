@@ -111,7 +111,14 @@ class Consumer(object):
         self.sock.send(query + "\r\n" + request.as_string())
 
         buffer = self.sock.recv(4096)
-        [result, data] = buffer.split('\r\n', 1)
+        try:
+            [result, data] = buffer.split('\r\n', 1)
+        except ValueError:
+            traceback.print_exc()
+            print >> sys.stderr, 'Buffer:', buffer
+            print >> sys.stderr, 'Query:', query
+            print >> sys.stderr, 'Headers:', headers
+            return False
         result = result.split(' ')
 
         if int(result[1]) != 200:
