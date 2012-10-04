@@ -123,7 +123,7 @@ class Main:
 
         # Initialize plugins. Must be done after fullscreen-mode so variables depending on size will work.
         self.visualizer.dataset = self.dataset # fulhack
-        self.visualizer.init_plugins()
+        self.visualizer.init_all_plugins()
 
         # Setup signal and event handling
         signal(SIGHUP, self.handle_sighup)
@@ -149,7 +149,7 @@ class Main:
         self.parse_config(config)
         self.load_dataset()
         self.visualizer.dataset = self.dataset # fulhack
-        self.visualizer.init_plugins()
+        self.visualizer.init_all_plugins()
         self.visualizer.write_message('Reloaded config')
 
     def handle_sigint(self, *args):

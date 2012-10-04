@@ -154,23 +154,24 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         finally:
             info[0].close()
 
-    def init_plugins(self):
+    def init_all_plugins(self):
         for plugin, mod in self.plugins:
-            plugin._last_render = 0
+            self.init_plugin(plugin)
 
-            # subscribe to required datasets
-            req = getattr(plugin, 'dataset', [])
-            for ds in req:
-                if not ds in self.dataset:
-                    plugin.log.error('Requires dataset "%s" which is not available', ds)
-                    return
-                func = plugin.on_data
-                try:
-                    self.dataset[ds].subscribe(ds, func)
-                except Exception, e:
-                    traceback.print_exc()
-                    plugin.log.error('Requires dataset "%s" but consumer refused subscription: %s', ds, str(e))
-                    return
+    def init_plugin(self, plugin):
+        plugin._last_render = 0
+        req = getattr(plugin, 'dataset', [])
+        for ds in req:
+            if not ds in self.dataset:
+                plugin.log.error('Requires dataset "%s" which is not available', ds)
+                return
+            func = plugin.on_data
+            try:
+                self.dataset[ds].subscribe(ds, func)
+            except Exception, e:
+                traceback.print_exc()
+                plugin.log.error('Requires dataset "%s" but consumer refused subscription: %s', ds, str(e))
+                return
 
     def configure(self, widget, event=None):
         with self.drawable():
