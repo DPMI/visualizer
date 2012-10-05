@@ -98,7 +98,14 @@ class Plugin(object):
                         for y in pipe(x, *remaining):
                             yield y
 
-            self.filter[ds] = lambda x: pipe(x, *flt)
+            if len(flt) == 0:
+                func = lambda x: x
+            elif len(flt) == 1:
+                func = flt[0]
+            else:
+                func = lambda x: pipe(x, *flt)
+
+            self.filter[ds] = func
 
     def on_packet(self, stream, frame):
         pass # do nothing
