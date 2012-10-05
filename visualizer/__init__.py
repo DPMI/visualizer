@@ -331,6 +331,9 @@ def run():
             print >> sys.stderr, 'No config-file specified and "visualizer.conf" not found'
             sys.exit(1)
         args.config = 'visualizer.conf'
+    if not os.path.exists(args.config):
+        print >> sys.stderr, 'Failed to load configuration from %s: No such file or directory' % args.config
+        sys.exit(1)
 
     # parse config
     config = ConfigParser()
