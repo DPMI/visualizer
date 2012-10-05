@@ -1,4 +1,5 @@
 from visualizer.plugin import PluginCairo, attribute
+import cairo
 
 name = 'NPL Static Image content plugin'
 author = ('David Sveningsson', 'dsv@bth.se')
