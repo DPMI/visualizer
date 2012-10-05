@@ -56,6 +56,9 @@ class Plugin(object):
         self._lock = Lock()
         self.filter = {}
 
+        methods = inspect.getmembers(self, lambda x: inspect.ismethod(x) and hasattr(x, '_attribute'))
+        self._attributes = dict([(func._attribute.name, func._attribute) for name, func in methods])
+
     def lock(self):
         self._lock.acquire()
 
@@ -67,6 +70,14 @@ class Plugin(object):
 
     def __exit__(self, type, value, traceback):
         self.unlock()
+
+    def attr_default(self, name, value):
+        """Change the attribute default value
+        Useful for plugins which inherits from other plugins but want a different default value"""
+        try:
+            self._attributes[name].default = value
+        except KeyError:
+            raise AttributeError, "'%s'" % name
 
     @attribute(type=str, sample="NAME:csv:extract(2)")
     def source(self, value):
@@ -115,8 +126,7 @@ class Plugin(object):
         pass # do nothing
 
     def attributes(self):
-        methods = inspect.getmembers(self, lambda x: inspect.ismethod(x) and hasattr(x, '_attribute'))
-        return dict([(func._attribute.name, func._attribute) for name, func in methods])
+        return self._attributes
 
     def on_resize(self, size):
         self._generate_framebuffer(size)
