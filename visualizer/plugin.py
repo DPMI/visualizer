@@ -17,13 +17,14 @@ class color:
     pass
 
 class Attribute():
-    def __init__(self, func, name=None, type=None, default=None, sample=None):
+    def __init__(self, func, name=None, type=None, default=None, sample=None, auto=True):
         self.func = func
         self.name = name is not None and name or func.__name__
         self.doc = func.__doc__
         self.type = type
         self.default = default
         self.sample = sample
+        self.auto = auto
 
     def __str__(self):
         return '<Attribute %s>' % self.name
@@ -83,7 +84,7 @@ class PluginBase(object):
         except KeyError:
             raise AttributeError, "'%s'" % name
 
-    @attribute(type=int, name='framerate', default=-1)
+    @attribute(type=int, name='framerate', default=-1, auto=False)
     def set_framerate(self, value):
         """Override rendering framerate."""
         self.framerate = int(value)

@@ -131,6 +131,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
             # Set all attributes
             for attr in attr_table.values():
+                if attr.name not in kwargs and not attr.auto: continue
                 v = kwargs.get(attr.name, attr.default)
                 try:
                     attr.set(plugin, v)
