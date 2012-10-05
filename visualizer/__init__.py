@@ -278,10 +278,24 @@ class Main:
             a = self.parse_attrib(dict(config.items(section)))
 
             if ns == 'consumer':
+                if 'host' not in a:
+                    self.log.error('consumer/%s missing host, ignored' % index)
+                    continue
+                if 'port' not in a:
+                    self.log.error('consumer/%s missing port, ignored' % index)
+                    continue
+
                 con = consumer.Consumer(a['host'], a['port'], index)
                 self.add_consumer(con)
 
             if ns == 'process':
+                if 'command' not in a:
+                    self.log.error('process/%s missing command, ignored' % index)
+                    continue
+                if 'dataset' not in a:
+                    self.log.error('process/%s missing dataset, ignored' % index)
+                    continue
+
                 con = consumer.Process(a['command'], a['dataset'], index)
                 self.add_consumer(con)
 
