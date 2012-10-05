@@ -15,7 +15,6 @@ api = 1
 
 class TOPstream(Plugin, PluginUI):
     interval = 1
-    dataset = ['topstream']
 
     def __init__(self):
         Plugin.__init__(self)
@@ -24,14 +23,15 @@ class TOPstream(Plugin, PluginUI):
         self.font_a = PluginUI.create_font(self.cr, size=16)
         self.font_b = PluginUI.create_font(self.cr, size=12)
         self.hosts = []
+        self.dataset = []
 
     def on_resize(self, size):
         Plugin.on_resize(self, size)
         PluginUI.on_resize(self, size)
 
     def on_data(self, ds, data):
-        assert ds == 'topstream'
-        self.hosts = json.loads(data)
+        func = self.filter[dataset]
+        self.content = list(func(data))
 
     # cairo
     def do_render(self):
