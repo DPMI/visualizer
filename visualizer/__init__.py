@@ -28,7 +28,7 @@ def ConfigParserWrapper(func):
         def inner(self, section, option, default=None):
             try:
                 return func(self, section, option)
-            except configparser.NoOptionError:
+            except (configparser.NoOptionError, configparser.NoSectionError):
                 if default is not None:
                     return default
                 raise
