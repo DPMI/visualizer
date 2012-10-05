@@ -18,13 +18,6 @@ date = '2012-05-31'
 version = 1
 api = 1
 
-def csv(value):
-    for line in value.splitlines():
-        yield tuple([float(x.strip('\x00')) for x in line.split(';')])
-
-def extract(index, value):
-    yield value[index-1]
-
 clamp = lambda v,a,b: min(max(v,a),b)
 
 class Histogram(Plugin, PluginUI):
@@ -48,39 +41,6 @@ class Histogram(Plugin, PluginUI):
 
         # chart margins
         self.margin = [30, 5, 60, 30] # top right bottom left
-
-    @attribute(type=str, sample="NAME:csv:extract(2)")
-    def source(self, value):
-        """Datasource for histogram.
-        Format: DATASET:FILTER..."""
-        for pair in value.split(';'):
-            p = pair.split(':')
-            ds = p[0]
-            self.dataset.append(ds)
-
-            flt = []
-            for func in p[1:]:
-                args = None
-                if '(' in func:
-                    i = func.index('(')
-                    args = eval(func[i:]) # this works because "(..)" in "foo(..)" happens to be a interpretable as a tuple
-                    if not isinstance(args,tuple): args = (args,) # happens when there is only a single arg
-                    func = func[:i]
-
-                func = sys.modules[__name__].__dict__[func]
-                if args:
-                    func = functools.partial(func, *args)
-                flt.append(func)
-
-            def pipe(value, func, *remaining):
-                for x in func(value):
-                    if len(remaining) == 0:
-                        yield x
-                    else:
-                        for y in pipe(x, *remaining):
-                            yield y
-
-            self.filter[ds] = lambda x: pipe(x, *flt)
 
     @attribute(name="title", type=str, default='Unnamed histogram')
     def set_title(self, value):

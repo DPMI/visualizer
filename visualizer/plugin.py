@@ -6,6 +6,8 @@ from OpenGL.GL.ARB.framebuffer_object import *
 from threading import Lock
 from glob import glob
 import inspect
+import functools
+import filters
 
 # easy access
 from _cairo import CairoWidget as PluginUI
@@ -64,6 +66,39 @@ class Plugin(object):
 
     def __exit__(self, type, value, traceback):
         self.unlock()
+
+    @attribute(type=str, sample="NAME:csv:extract(2)")
+    def source(self, value):
+        """Datasource for histogram.
+        Format: DATASET:FILTER..."""
+        for pair in value.split(';'):
+            p = pair.split(':')
+            ds = p[0]
+            self.dataset.append(ds)
+
+            flt = []
+            for func in p[1:]:
+                args = None
+                if '(' in func:
+                    i = func.index('(')
+                    args = eval(func[i:]) # this works because "(..)" in "foo(..)" happens to be a interpretable as a tuple
+                    if not isinstance(args,tuple): args = (args,) # happens when there is only a single arg
+                    func = func[:i]
+
+                func = filters.__dict__[func]
+                if args:
+                    func = functools.partial(func, *args)
+                flt.append(func)
+
+            def pipe(value, func, *remaining):
+                for x in func(value):
+                    if len(remaining) == 0:
+                        yield x
+                    else:
+                        for y in pipe(x, *remaining):
+                            yield y
+
+            self.filter[ds] = lambda x: pipe(x, *flt)
 
     def on_packet(self, stream, frame):
         pass # do nothing
