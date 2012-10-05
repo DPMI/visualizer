@@ -43,11 +43,11 @@ class Table(Plugin, PluginUI):
         self.area.set_font_description(self.font_b)
         self.area.set_width(int(self.size[0] * pango.SCALE))
 
-    @attribute(type=str, sample="NAME;json")
+    @attribute(type=str, sample="NAME:json")
     def source(self, value):
         """Data source.
 
-        Format: NAME;FILTER
+        Format: NAME:FILTER
         where filter is "json" or "whitespace".
         """
         [ds, flt] = value.split(':')
