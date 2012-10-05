@@ -31,7 +31,7 @@ class Table(Plugin, PluginUI):
         self.font_b = PluginUI.create_font(self.cr, size=12)
 
         self.title = None
-        self.header = []
+        self.header = None
         self.content = []
         self.dataset = []
         self.filter = {}
@@ -93,7 +93,11 @@ class Table(Plugin, PluginUI):
 
         cr.translate(0, 30)
 
-        text = '\n'.join(['\t'.join([str(y) for y in x]) for x in itertools.chain([self.header], self.content)])
+        rows = self.content
+        if self.header:
+            rows = itertools.chain([self.header], rows)
+
+        text = '\n'.join(['\t'.join([str(y) for y in x]) for x in rows])
         self.area.set_markup(text);
         self.pango.show_layout(self.area)
 
