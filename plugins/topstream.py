@@ -29,9 +29,9 @@ class TOPstream(Plugin, PluginUI):
         Plugin.on_resize(self, size)
         PluginUI.on_resize(self, size)
 
-    def on_data(self, ds, data):
+    def on_data(self, dataset, data):
         func = self.filter[dataset]
-        self.content = list(func(data))
+        self.hosts = list(func(data))
 
     # cairo
     def do_render(self):
