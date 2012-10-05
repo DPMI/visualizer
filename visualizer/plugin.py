@@ -5,6 +5,7 @@ from OpenGL.GL import *
 from OpenGL.GL.ARB.framebuffer_object import *
 from threading import Lock
 from glob import glob
+import inspect
 
 # easy access
 from _cairo import CairoWidget as PluginUI
@@ -71,7 +72,8 @@ class Plugin(object):
         pass # do nothing
 
     def attributes(self):
-        return dict([(x._attribute.name, x._attribute) for x in self.__class__.__dict__.values() if hasattr(x, '_attribute')])
+        methods = inspect.getmembers(self, lambda x: inspect.ismethod(x) and hasattr(x, '_attribute'))
+        return dict([(func._attribute.name, func._attribute) for name, func in methods])
 
     def on_resize(self, size):
         self._generate_framebuffer(size)
@@ -189,4 +191,3 @@ def available():
             traceback.print_exc()
         finally:
             info[0].close()
-
