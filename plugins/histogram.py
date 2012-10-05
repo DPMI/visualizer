@@ -31,7 +31,6 @@ class Histogram(Plugin, PluginUI):
         self.font_b = PluginUI.create_font(self.cr, size=12)
         self.font_label = PluginUI.create_font(self.cr, size=10)
         self.dataset = []
-        self.filter = {}
         self.data = numpy.array([0]*100, numpy.float)
         self.n_samples = 100
         self.pos = 0

@@ -54,6 +54,7 @@ class Plugin(object):
         self._depth = None
         self._current = 0
         self._lock = Lock()
+        self.filter = {}
 
     def lock(self):
         self._lock.acquire()

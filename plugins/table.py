@@ -34,7 +34,6 @@ class Table(Plugin, PluginUI):
         self.header = None
         self.content = []
         self.dataset = []
-        self.filter = {}
 
         self.area = self.pango.create_layout()
         self.area.set_font_description(self.font_b)
