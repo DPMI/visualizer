@@ -246,18 +246,19 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         t = time.time()
         for plugin, mod in self.plugins:
-            if plugin.interval < 0: # static content, only rendered when invalidated
-                continue
-
-            frac = 1.0 / plugin.interval
-
-            if t - plugin._last_render < frac:
-                continue
+            if plugin.framerate == 0:
+                # render every frame
+                plugin.invalidate()
+            elif plugin.framerate > 0:
+                # render at fixed framerate
+                frac = 1.0 / plugin.framerate
+                if t - plugin._last_render >= frac:
+                    plugin.invalidate()
 
             try:
                 with plugin:
-                    plugin.render()
-                    plugin._last_render = t
+                    if plugin.render():
+                        plugin._last_render = t
             except:
                 traceback.print_exc()
 
@@ -275,7 +276,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         for i, (plugin, mod) in enumerate(plugins):
             if plugin is not None:
-                plugin.bind()
+                plugin.bind_texture()
                 glColor(1,1,1,1)
             else:
                 glBindTexture(GL_TEXTURE_2D, 0)

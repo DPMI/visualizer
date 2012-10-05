@@ -9,8 +9,8 @@ import inspect
 import functools
 import filters
 
-# easy access
-from _cairo import CairoWidget as PluginUI
+from _cairo import Cairo
+from _framebuffer import Framebuffer
 
 # used for attribute type
 class color:
@@ -47,14 +47,18 @@ def attribute(*args, **kwargs):
         return func
     return wrapper
 
-class Plugin(object):
+class PluginBase(object):
+    # Rendering framerate
+    #    -1: Static content, only rendered once
+    #     0: Rendered every frame
+    #  1..N: Rendered at N frames per second
+    framerate = -1
+
     def __init__(self):
-        self._fbo = None
-        self._texture = None
-        self._depth = None
-        self._current = 0
         self._lock = Lock()
         self.filter = {}
+        self.dataset = []
+        self._invalidated = True
 
         methods = inspect.getmembers(self, lambda x: inspect.ismethod(x) and hasattr(x, '_attribute'))
         self._attributes = dict([(func._attribute.name, func._attribute) for name, func in methods])
@@ -78,6 +82,11 @@ class Plugin(object):
             self._attributes[name].default = value
         except KeyError:
             raise AttributeError, "'%s'" % name
+
+    @attribute(type=int, name='framerate', default=-1)
+    def set_framerate(self, value):
+        """Override rendering framerate."""
+        self.framerate = int(value)
 
     @attribute(type=str, sample="NAME:csv:extract(2)")
     def source(self, value):
@@ -119,6 +128,12 @@ class Plugin(object):
 
             self.filter[ds] = func
 
+    def invalidate(self):
+        self._invalidated = True
+
+    def is_invalidated(self):
+        return self._invalidated
+
     def on_packet(self, stream, frame):
         pass # do nothing
 
@@ -129,46 +144,40 @@ class Plugin(object):
         return self._attributes
 
     def on_resize(self, size):
-        self._generate_framebuffer(size)
+        raise NotImplementedError
 
     def render(self):
-        glBindFramebuffer(GL_FRAMEBUFFER, self._fbo[self._current])
-        self.on_render()
-        glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        self._current = 1 - self._current
+        raise NotImplementedError
 
-    def bind(self):
-        glBindTexture(GL_TEXTURE_2D, self._texture[self._current])
+class PluginCairo(PluginBase, Cairo):
+    def __init__(self):
+        PluginBase.__init__(self)
+        Cairo.__init__(self, (1,1))
 
-    def _generate_framebuffer(self, size):
-        if self._fbo is None:
-            self._fbo = glGenFramebuffers(2)
-            self._texture = glGenTextures(2)
-            self._depth = glGenTextures(2)
+    def on_resize(self, size):
+        Cairo.on_resize(self, size)
 
-        w = size[0]
-        h = size[1]
+    def render(self):
+        if not self.is_invalidated():
+            return False
 
-        try:
-            for i in range(2):
-                glBindFramebuffer(GL_FRAMEBUFFER, self._fbo[i])
-                glBindTexture(GL_TEXTURE_2D, self._texture[i])
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_INT, None)
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self._texture[i], 0)
+        Cairo.render(self)
+        return True
 
-                err = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-                if ( err != GL_FRAMEBUFFER_COMPLETE ):
-                    raise RuntimeError, "Framebuffer incomplete\n"
+class PluginOpenGL(PluginBase, Framebuffer):
+    def __init__(self):
+        PluginBase.__init__(self)
+        Framebuffer.__init__(self, (1,1))
 
-            glClearColor(0, 0, 0, 1)
-            glClear(GL_COLOR_BUFFER_BIT)
-        finally:
-            glBindFramebuffer(GL_FRAMEBUFFER, 0)
+    def on_resize(self, size):
+        Framebuffer.on_resize(self, size)
 
+    def render(self):
+        if not self.invalidated():
+            return False
+
+        Framebuffer.render(self)
+        return True
 
 def trim(docstring):
     """Parse docstring. From python docs."""
