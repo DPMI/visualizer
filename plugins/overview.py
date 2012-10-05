@@ -1,25 +1,17 @@
-from visualizer.plugin import Plugin, attribute, PluginUI
-import htmlcolor
-import time, calendar
-import math
-import traceback
-from OpenGL.GL import *
-from visualizer.picotime import picotime
+from visualizer.plugin import PluginCairo, attribute
 
 # metadata
 name = 'NPL Overview plugin'
 author = ('David Sveningsson', 'dsv@bth.se')
-date = '2011-08-16'
-version = 1
+date = '2012-10-05'
+version = 2
 api = 1
 
-parser = htmlcolor.Parser(factory=htmlcolor.FloatFactory, components=4)
-
-class UI(PluginUI):
+class UI(PluginCairo):
     def __init__(self, *args, **kwargs):
-        PluginUI.__init__(self, *args, **kwargs)
+        PluginCairo.__init__(self, *args, **kwargs)
 
-        self.font = PluginUI.create_font(self.cr, size=16)
+        self.font = PluginCairo.create_font(self.cr, size=16)
 
         self.ethernet = {}
         self.transport = {}
@@ -63,17 +55,12 @@ class UI(PluginUI):
 
         cr.restore()
 
-class overview(Plugin):
+class overview(PluginCairo):
     interval = 1
     dataset = ['overview']
 
     def __init__(self):
-        Plugin.__init__(self)
-        self.ui = UI((1,1))
-
-    def on_resize(self, size):
-        Plugin.on_resize(self, size)
-        self.ui.on_resize(size)
+        PluginCairo.__init__(self)
 
     def on_update(self, consumer):
         global proto_by_number

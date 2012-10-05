@@ -275,7 +275,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         for i, (plugin, mod) in enumerate(plugins):
             if plugin is not None:
-                plugin.bind()
+                plugin.bind_texture()
                 glColor(1,1,1,1)
             else:
                 glBindTexture(GL_TEXTURE_2D, 0)

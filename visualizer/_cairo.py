@@ -9,13 +9,12 @@ import hashlib
 
 from pango import ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT
 
-class CairoWidget:
+class Cairo(object):
     def __init__(self, size, format=cairo.FORMAT_ARGB32, filter=GL_NEAREST):
         self.size = size
         self.width, self.height = size
         self._format = format
         self._filter = filter
-        self._invalidated = True
         self._generate_surface()
 
     def _generate_surface(self):
@@ -46,12 +45,6 @@ class CairoWidget:
 
     def bind_texture(self):
         glBindTexture(GL_TEXTURE_2D, self._texture)
-
-    def invalidate(self):
-        self._invalidated = True
-
-    def is_invalidated(self):
-        return self._invalidated
 
     def display(self):
         self.bind_texture()
@@ -194,3 +187,14 @@ class CairoWidget:
             cr.translate(-35, 15)
 
         cr.restore()
+
+class CairoWidget(Cairo):
+    def __init__(self, size):
+        Cairo.__init__(self, size)
+        self._invalidated = True
+
+    def invalidate(self):
+        self._invalidated = True
+
+    def is_invalidated(self):
+        return self._invalidated

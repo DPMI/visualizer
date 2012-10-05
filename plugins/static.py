@@ -1,18 +1,12 @@
-from visualizer.plugin import Plugin, attribute, PluginUI
-import htmlcolor
-import time, calendar
-import math
-import traceback
-from OpenGL.GL import *
-from visualizer.picotime import picotime
+from visualizer.plugin import PluginCairo, attribute
 
 name = 'NPL Static content plugin'
 author = ('David Sveningsson', 'dsv@bth.se')
-date = '2011-08-15'
-version = 0
+date = '2012-10-05'
+version = 1
 api = 1
 
-class StaticContent(Plugin, PluginUI):
+class StaticContent(PluginCairo):
     interval = -1
 
     @attribute(type=str)

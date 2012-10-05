@@ -1,10 +1,4 @@
-from visualizer.plugin import Plugin, attribute, color, PluginUI
-import htmlcolor
-import time, calendar
-import math
-import traceback
-from OpenGL.GL import *
-from visualizer.picotime import picotime
+from visualizer.plugin import PluginCairo, attribute, color
 import sys
 import numpy
 import cairo
@@ -20,16 +14,15 @@ api = 1
 
 clamp = lambda v,a,b: min(max(v,a),b)
 
-class Histogram(Plugin, PluginUI):
+class Histogram(PluginCairo):
     interval = 1
 
     def __init__(self):
-        Plugin.__init__(self)
-        PluginUI.__init__(self, (1,1))
+        PluginCairo.__init__(self)
         self.title = None
-        self.font_a = PluginUI.create_font(self.cr, size=16)
-        self.font_b = PluginUI.create_font(self.cr, size=12)
-        self.font_label = PluginUI.create_font(self.cr, size=10)
+        self.font_a = PluginCairo.create_font(self.cr, size=16)
+        self.font_b = PluginCairo.create_font(self.cr, size=12)
+        self.font_label = PluginCairo.create_font(self.cr, size=10)
         self.dataset = []
         self.data = numpy.array([0]*100, numpy.float)
         self.n_samples = 100
@@ -157,7 +150,6 @@ class Histogram(Plugin, PluginUI):
             cr.translate(0, -dx)
         cr.restore()
 
-    # cairo
     def do_render(self):
         cr = self.cr
 
@@ -166,20 +158,6 @@ class Histogram(Plugin, PluginUI):
         self.render_chart()
         self.render_graph()
         self.render_labels()
-
-    def on_resize(self, size):
-        PluginUI.on_resize(self, size)
-
-    # plugin
-    def render(self):
-        PluginUI.invalidate(self)
-        PluginUI.render(self)
-
-    def bind(self):
-        PluginUI.bind_texture(self)
-
-    def _generate_framebuffer(self, size):
-        pass # do not want
 
 def factory(**kwargs):
     item = Histogram()

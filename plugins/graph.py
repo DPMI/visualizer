@@ -1,10 +1,4 @@
-from visualizer.plugin import Plugin, attribute, PluginUI
-import htmlcolor
-import time, calendar
-import math
-import traceback
-from OpenGL.GL import *
-from visualizer.picotime import picotime
+from visualizer.plugin import PluginCairo, attribute
 import sys
 import numpy
 import cairo
@@ -22,16 +16,15 @@ def csv_filter(value):
     for line in value.splitlines():
         yield tuple([float(x.strip('\x00')) for x in line.split(';')])
 
-class Graph(Plugin, PluginUI):
+class Graph(PluginCairo):
     interval = 1
 
     def __init__(self):
-        Plugin.__init__(self)
-        PluginUI.__init__(self, (1,1))
+        PluginCairo.__init__(self)
         self._title = '&lt;Unnamed graph&gt;'
-        self.font_a = PluginUI.create_font(self.cr, size=16)
-        self.font_b = PluginUI.create_font(self.cr, size=12)
-        self.font_label = PluginUI.create_font(self.cr, size=10)
+        self.font_a = PluginCairo.create_font(self.cr, size=16)
+        self.font_b = PluginCairo.create_font(self.cr, size=12)
+        self.font_label = PluginCairo.create_font(self.cr, size=10)
         self.dataset = []
         self.data = numpy.array([0]*100, numpy.float)
         self.n_samples = 100
@@ -260,7 +253,6 @@ class Graph(Plugin, PluginUI):
 
         cr.restore()
 
-    # cairo
     def do_render(self):
         cr = self.cr
 
@@ -271,21 +263,10 @@ class Graph(Plugin, PluginUI):
         self.render_graph()
 
     def on_resize(self, size):
-        PluginUI.on_resize(self, size)
+        PluginCairo.on_resize(self, size)
         if self.auto is not None:
             self.samples('auto/%f' % self.auto)
         elif self.n_samples > size[0]:
             print >> sys.stderr, 'Warning: graph samplerate (%d) is greater than horizontal resolution (%d), it is a waste of CPU and GPU and yields subpar rendering (i.e moire patterns). Either lower the samplerate or preferably use "auto".' % (self.n_samples, size[0])
-
-    # plugin
-    def render(self):
-        PluginUI.invalidate(self)
-        PluginUI.render(self)
-
-    def bind(self):
-        PluginUI.bind_texture(self)
-
-    def _generate_framebuffer(self, size):
-        pass # do not want
 
 factory = Graph

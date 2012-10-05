@@ -1,19 +1,18 @@
 # -*- coding: utf-8; -*-
 
-from visualizer.plugin import Plugin, attribute, PluginUI
+from visualizer.plugin import PluginCairo, attribute
 import sys
 import traceback
 import pango
 import itertools
-from json import loads as json
 
 name = 'NPL Tabular data plugin'
 author = ('David Sveningsson', 'dsv@bth.se')
-date = '2012-06-14'
-version = 0
+date = '2012-10-05'
+version = 1
 api = 1
 
-class Table(Plugin, PluginUI):
+class Table(PluginCairo):
     """Displays tabular data.
 
     Each set of data represents a full table, e.g. a json-encoded list of lists.
@@ -24,11 +23,10 @@ class Table(Plugin, PluginUI):
     interval = 1
 
     def __init__(self):
-        Plugin.__init__(self)
-        PluginUI.__init__(self, size=(1,1))
+        PluginCairo.__init__(self)
 
-        self.font_a = PluginUI.create_font(self.cr, size=16)
-        self.font_b = PluginUI.create_font(self.cr, size=12)
+        self.font_a = PluginCairo.create_font(self.cr, size=16)
+        self.font_b = PluginCairo.create_font(self.cr, size=12)
 
         self.title = None
         self.header = None
@@ -73,8 +71,7 @@ class Table(Plugin, PluginUI):
         self.area.set_tabs(t)
 
     def on_resize(self, size):
-        Plugin.on_resize(self, size)
-        PluginUI.on_resize(self, size)
+        PluginCairo.on_resize(self, size)
         self.area.set_width(int(self.size[0] * pango.SCALE))
 
     def on_data(self, dataset, data):
@@ -101,16 +98,5 @@ class Table(Plugin, PluginUI):
         self.pango.show_layout(self.area)
 
         cr.restore()
-
-    # plugin
-    def render(self):
-        PluginUI.invalidate(self)
-        PluginUI.render(self)
-
-    def bind(self):
-        PluginUI.bind_texture(self)
-
-    def _generate_framebuffer(self, size):
-        pass # do not want
 
 factory = Table
