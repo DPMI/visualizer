@@ -4,3 +4,6 @@ def csv(value):
 
 def extract(index, value):
     yield value[index-1]
+
+def split(value):
+    yield value.split()

@@ -13,9 +13,6 @@ date = '2012-06-14'
 version = 0
 api = 1
 
-def whitespace(value):
-    return [value.split()]
-
 class Table(Plugin, PluginUI):
     """Displays tabular data.
 
@@ -37,22 +34,11 @@ class Table(Plugin, PluginUI):
         self.header = []
         self.content = []
         self.dataset = []
-        self.filter = None
+        self.filter = {}
 
         self.area = self.pango.create_layout()
         self.area.set_font_description(self.font_b)
         self.area.set_width(int(self.size[0] * pango.SCALE))
-
-    @attribute(type=str, sample="NAME:json")
-    def source(self, value):
-        """Data source.
-
-        Format: NAME:FILTER
-        where filter is "json" or "whitespace".
-        """
-        [ds, flt] = value.split(':')
-        self.dataset = [ds]
-        self.filter = sys.modules[__name__].__dict__[flt]
 
     @attribute(name='title', type=str, default='Unnamed table')
     def set_title(self, value):
@@ -92,8 +78,9 @@ class Table(Plugin, PluginUI):
         PluginUI.on_resize(self, size)
         self.area.set_width(int(self.size[0] * pango.SCALE))
 
-    def on_data(self, ds, data):
-        self.content = self.filter(data)
+    def on_data(self, dataset, data):
+        func = self.filter[dataset]
+        self.content = list(func(data))
 
     # cairo
     def do_render(self):
