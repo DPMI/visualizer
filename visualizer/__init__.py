@@ -135,8 +135,11 @@ class Main:
         for con in self.consumers:
             try:
                 con.connect()
+            except socket.error:
+                pass
             except:
-                con.disable()
+                traceback.print_exc()
+
             for ds in con.dataset:
                 self.dataset[ds] = con
 
@@ -203,7 +206,6 @@ class Main:
                     con.pull()
                 except socket.error:
                     traceback.print_exc()
-                    con.disable()
                     self.visualizer.write_message('Lost connection to %s' % con)
                 except Exception, e:
                     traceback.print_exc()

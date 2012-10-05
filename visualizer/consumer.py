@@ -58,9 +58,6 @@ class Consumer(object):
         for x in self.subscriptions:
             self.subscribe(x, None)
 
-    def disable(self):
-        self.sock = None
-
     def get(self, path):
         headers = {
             'Accept': 'application/json',
@@ -90,6 +87,7 @@ class Consumer(object):
         raw = self.sock.recv(header.size)
         if raw == '':
             self.log.info('Lost connection to %s:%d"', *self.peer)
+            self.sock = None
             raise socket.error, 'socket shutdown'
 
         try:
