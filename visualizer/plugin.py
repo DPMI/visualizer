@@ -48,6 +48,12 @@ def attribute(*args, **kwargs):
     return wrapper
 
 class PluginBase(object):
+    # Rendering framerate
+    #    -1: Static content, only rendered once
+    #     0: Rendered every frame
+    #  1..N: Rendered at N frames per second
+    interval = -1
+
     def __init__(self):
         self._lock = Lock()
         self.filter = {}
@@ -147,7 +153,11 @@ class PluginCairo(PluginBase, Cairo):
         Cairo.on_resize(self, size)
 
     def render(self):
+        if not self.is_invalidated():
+            return False
+
         Cairo.render(self)
+        return True
 
 class PluginOpenGL(PluginBase, Framebuffer):
     def __init__(self):
@@ -158,7 +168,11 @@ class PluginOpenGL(PluginBase, Framebuffer):
         Framebuffer.on_resize(self, size)
 
     def render(self):
+        if not self.invalidated():
+            return False
+
         Framebuffer.render(self)
+        return True
 
 def trim(docstring):
     """Parse docstring. From python docs."""

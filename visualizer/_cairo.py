@@ -73,9 +73,6 @@ class Cairo(object):
         raise NotImplementedError
 
     def render(self):
-        if not self._invalidated:
-            return
-
         self.do_render()
         glBindTexture(GL_TEXTURE_2D, self._texture)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_BGRA, GL_UNSIGNED_BYTE, self._data.tostring());
