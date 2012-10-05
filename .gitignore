@@ -1,3 +1,8 @@
 *.py[co]
 *~
 visualizer.log
+
+*~
+\#*\#
+.\#*
+
