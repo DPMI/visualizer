@@ -83,6 +83,11 @@ class PluginBase(object):
         except KeyError:
             raise AttributeError, "'%s'" % name
 
+    @attribute(type=int, name='framerate', default=-1)
+    def set_framerate(self, value):
+        """Override rendering framerate."""
+        self.interval = int(value)
+
     @attribute(type=str, sample="NAME:csv:extract(2)")
     def source(self, value):
         """Datasource for histogram.
