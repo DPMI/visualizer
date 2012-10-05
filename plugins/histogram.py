@@ -15,7 +15,7 @@ api = 1
 clamp = lambda v,a,b: min(max(v,a),b)
 
 class Histogram(PluginCairo):
-    interval = 1
+    framerate = 1
 
     def __init__(self):
         PluginCairo.__init__(self)

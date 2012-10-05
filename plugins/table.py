@@ -20,7 +20,7 @@ class Table(PluginCairo):
 
     """
 
-    interval = 1
+    framerate = 1
 
     def __init__(self):
         PluginCairo.__init__(self)

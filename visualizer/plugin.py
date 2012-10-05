@@ -52,7 +52,7 @@ class PluginBase(object):
     #    -1: Static content, only rendered once
     #     0: Rendered every frame
     #  1..N: Rendered at N frames per second
-    interval = -1
+    framerate = -1
 
     def __init__(self):
         self._lock = Lock()
@@ -86,7 +86,7 @@ class PluginBase(object):
     @attribute(type=int, name='framerate', default=-1)
     def set_framerate(self, value):
         """Override rendering framerate."""
-        self.interval = int(value)
+        self.framerate = int(value)
 
     @attribute(type=str, sample="NAME:csv:extract(2)")
     def source(self, value):

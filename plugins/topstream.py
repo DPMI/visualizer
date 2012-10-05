@@ -9,7 +9,7 @@ version = 1
 api = 1
 
 class TOPstream(Table):
-    interval = 1
+    framerate = 1
 
     def __init__(self):
         Table.__init__(self)

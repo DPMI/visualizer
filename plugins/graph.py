@@ -17,7 +17,7 @@ def csv_filter(value):
         yield tuple([float(x.strip('\x00')) for x in line.split(';')])
 
 class Graph(PluginCairo):
-    interval = 1
+    framerate = 1
 
     def __init__(self):
         PluginCairo.__init__(self)
@@ -111,7 +111,7 @@ class Graph(PluginCairo):
     def frequency(self, value):
         value = float(value)
         if value <= 0.0: raise ValueError('frequency must be greater than 0')
-        self.interval = value
+        self.framerate = value
 
     def normalize(self, value):
         # range (in units)

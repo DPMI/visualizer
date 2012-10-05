@@ -246,12 +246,12 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         t = time.time()
         for plugin, mod in self.plugins:
-            if plugin.interval == 0:
+            if plugin.framerate == 0:
                 # render every frame
                 plugin.invalidate()
-            elif plugin.interval > 0:
+            elif plugin.framerate > 0:
                 # render at fixed framerate
-                frac = 1.0 / plugin.interval
+                frac = 1.0 / plugin.framerate
                 if t - plugin._last_render >= frac:
                     plugin.invalidate()
 

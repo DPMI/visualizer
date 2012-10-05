@@ -56,7 +56,7 @@ class UI(PluginCairo):
         cr.restore()
 
 class overview(PluginCairo):
-    interval = 1
+    framerate = 1
     dataset = ['overview']
 
     def __init__(self):

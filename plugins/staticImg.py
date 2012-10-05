@@ -7,7 +7,7 @@ version = 0
 api = 1
 
 class StaticContent(PluginCairo):
-    interval = -1
+    framerate = -1
 
     @attribute(type=str)
     def text_font(self, value):
