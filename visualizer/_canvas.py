@@ -329,11 +329,17 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             else:
                 glFlush()
 
+    def visible_rows(self):
+        n = self.rows
+        if self.transition_enabled:
+            n += 1
+        return n
+
     def visible_plugins(self):
         # this block of code gets N plugins from the list (padding if len < N)
         # and wrapping the list when needed
         cur = self.current
-        rows = self.rows + 1 # during a transition one extra row is visible
+        rows = self.visible_rows()
         blank = Blank()
         pad = self.plugins + [(blank,None)]*(self.rows-len(self.plugins)) # pad list to number of rows
         plugins = pad[cur:cur+rows]
