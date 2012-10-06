@@ -42,13 +42,6 @@ class Graph(PluginCairo):
         self.margin = [30, 5, 20, 30] # top right bottom left
 
     @attribute(type=str)
-    def source(self, value):
-        for pair in value.split(';'):
-            [ds, flt] = pair.split(':')
-            self.dataset.append(ds)
-            self.filter[ds] = sys.modules[__name__].__dict__[flt]
-
-    @attribute(type=str)
     def title(self, value):
         self._title = value
 
