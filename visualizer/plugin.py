@@ -150,6 +150,11 @@ class PluginBase(object):
     def render(self):
         raise NotImplementedError
 
+    def blit(self):
+        self.bind_texture()
+        glColor(1,1,1,1)
+        glDrawArrays(GL_QUADS, 0, 4)
+
 class PluginCairo(PluginBase, Cairo):
     def __init__(self):
         PluginBase.__init__(self)

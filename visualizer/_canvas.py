@@ -277,13 +277,11 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         for plugin, mod in plugins:
             if plugin is not None:
-                plugin.bind_texture()
-                glColor(1,1,1,1)
+                plugin.blit()
             else:
                 glBindTexture(GL_TEXTURE_2D, 0)
                 glColor(0,0,0,1)
-
-            glDrawArrays(GL_QUADS, 0, 4)
+                glDrawArrays(GL_QUADS, 0, 4)
             glTranslate(0, 1, 0)
 
         glPopMatrix()
