@@ -275,7 +275,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         glTranslate(0, offset, 0)
         glScale(1, 1.0 / self.rows, 1)
 
-        for i, (plugin, mod) in enumerate(plugins):
+        for plugin, mod in plugins:
             if plugin is not None:
                 plugin.bind_texture()
                 glColor(1,1,1,1)
