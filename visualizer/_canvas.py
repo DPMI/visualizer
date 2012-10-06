@@ -70,6 +70,14 @@ class GLContext:
         gldrawable.gl_end()
         return False # exceptions should propagate
 
+class Blank(object):
+    """Stub class when there is no plugin"""
+
+    def blit(self):
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glColor(0,0,0,1)
+        glDrawArrays(GL_QUADS, 0, 4)
+
 class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def __init__(self, size, transition_time=15):
         gtk.DrawingArea.__init__(self)
@@ -276,12 +284,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         glScale(1, 1.0 / self.rows, 1)
 
         for plugin, mod in plugins:
-            if plugin is not None:
-                plugin.blit()
-            else:
-                glBindTexture(GL_TEXTURE_2D, 0)
-                glColor(0,0,0,1)
-                glDrawArrays(GL_QUADS, 0, 4)
+            plugin.blit()
             glTranslate(0, 1, 0)
 
         glPopMatrix()
@@ -331,7 +334,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         # and wrapping the list when needed
         cur = self.current
         rows = self.rows + 1 # during a transition one extra row is visible
-        pad = self.plugins + [(None,None)]*(self.rows-len(self.plugins)) # pad list to number of rows
+        blank = Blank()
+        pad = self.plugins + [(blank,None)]*(self.rows-len(self.plugins)) # pad list to number of rows
         plugins = pad[cur:cur+rows]
         if len(plugins) < rows:
             plugins += pad[:rows-len(plugins)]
