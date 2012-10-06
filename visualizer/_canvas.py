@@ -19,6 +19,7 @@ from ctypes import c_void_p
 
 import consumer
 from _cairo import CairoWidget
+from hbox import HBox
 
 class MessageWidget(CairoWidget):
     html_escape_table = {
@@ -85,6 +86,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.size = size
         self.rows = 3
         self.plugins = []
+        self.hbox = {}
         self.dataset = []
         self.current = 0
         self.frames = 0
@@ -117,6 +119,17 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         # this could be implemented in this class, but it is harder to understand "with self"
         return GLContext(self)
 
+    def get_hbox(self, name):
+        if not name: return None
+
+        if name in self.hbox:
+            return self.hbox[name]
+
+        hbox = HBox()
+        self.hbox[name] = hbox
+        self.plugins.append((hbox, None))
+        return hbox
+
     def add_plugin(self, name, index, kwargs):
         log = logging.getLogger('%s/%s' % (name, index))
 
@@ -134,8 +147,14 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             # Allocate new plugin
             plugin = mod.factory()
             plugin.log = log
-            plugin.on_resize((self.size[0], self.size[1] / self.rows))
             attr_table = plugin.attributes()
+
+            # Find ev. hbox
+            hbox = self.get_hbox(kwargs.pop('hbox', None))
+
+            # if the plugin isn't in a container if can be resized directly
+            if not hbox:
+                plugin.on_resize((self.size[0], self.size[1] / self.rows))
 
             # Set all attributes
             for attr in attr_table.values():
@@ -156,7 +175,11 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 plugin.log.warning('No such attribute: %s', attr)
 
             plugin.log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
-            self.plugins.append((plugin,mod))
+
+            if not hbox:
+                self.plugins.append((plugin,mod))
+            else:
+                hbox.add_child(plugin, mod)
         except:
             traceback.print_exc()
             print >> sys.stderr, 'When trying to add plugin %s' % name
