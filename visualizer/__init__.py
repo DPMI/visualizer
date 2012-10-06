@@ -19,6 +19,7 @@ import logging
 
 import consumer, plugin
 from _canvas import Canvas
+from statistics import Statistics
 
 re_attrib = re.compile(r'\$[{]([^}]*)[}]')
 
@@ -104,6 +105,11 @@ class Main:
         self.log.debug('Parsing config')
         self.parse_config(config)
 
+        # Setup statistics
+        self.stats = Statistics()
+        self.add_consumer(self.stats)
+        gobject.timeout_add(1000, self.update_stats)
+
         # retrieve datasets from consumers
         self.load_dataset()
 
@@ -166,6 +172,13 @@ class Main:
 
         # Stop GTK main loop
         gtk.main_quit()
+
+    def update_stats(self, *args):
+        num_consumers = len(self.consumers)
+        connected_consumers = len([x for x in self.consumers if x.fileno()])
+
+        self.stats.update(consumers=(connected_consumers, num_consumers))
+        return True
 
     def destroy(self, widget, data=None):
         gtk.quit()
