@@ -215,11 +215,12 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             w = widget.allocation.width
             h = widget.allocation.height / self.rows
             self.size = (widget.allocation.width, widget.allocation.height)
+            t = time.time()
             for container in self.widgets:
                 container.on_resize((w,h))
 
                 # Force a rerender of plugin.
-                container.render()
+                container.render(t)
 
             # Create widget for displaying messages'
             self.msgwidget = MessageWidget(size=(self.size[0], 70))
