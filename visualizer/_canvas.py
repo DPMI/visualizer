@@ -182,6 +182,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def init_all_plugins(self):
         for plugin, mod in self.plugins:
             self.init_plugin(plugin)
+        while len(self.widgets) < self.rows:
+            self.widgets.append(Blank())
 
     def init_plugin(self, plugin):
         req = getattr(plugin, 'dataset', [])
@@ -341,13 +343,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         return n
 
     def visible_widgets(self):
-        # this block of code gets N plugins from the list (padding if len < N)
-        # and wrapping the list when needed
+        # this block of code gets N plugins from the list, wrapping when needed.
         cur = self.current
         rows = self.visible_rows()
-        blank = Blank()
-        pad = self.widgets + [blank]*(self.rows-len(self.widgets)) # pad list to number of rows
-        plugins = pad[cur:cur+rows]
+        plugins = self.widgets[cur:cur+rows]
         if len(plugins) < rows:
-            plugins += pad[:rows-len(plugins)]
+            plugins += self.widgets[:rows-len(plugins)]
         return plugins
