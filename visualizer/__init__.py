@@ -315,6 +315,14 @@ class Main:
             if ns == 'plugin':
                 self.visualizer.add_plugin(key, index, a)
 
+            if ns == 'hbox':
+                hbox = self.visualizer.get_hbox(index)
+                for k,v in a.iteritems():
+                    if k == 'width':
+                        hbox.set_width(v)
+                    else:
+                        self.log.warning('hbox has no such attribute: %s', k)
+
 def usage():
     return """\
 Plugins:

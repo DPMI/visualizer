@@ -19,6 +19,7 @@ from ctypes import c_void_p
 
 import consumer
 from _cairo import CairoWidget
+from container import Frame, HBox, Blank
 
 class MessageWidget(CairoWidget):
     html_escape_table = {
@@ -77,6 +78,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.size = size
         self.rows = 3
         self.plugins = []
+        self.widgets = []
+        self.hbox = {}
         self.dataset = []
         self.current = 0
         self.frames = 0
@@ -109,6 +112,18 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         # this could be implemented in this class, but it is harder to understand "with self"
         return GLContext(self)
 
+    def get_hbox(self, name):
+        if not name: return None
+
+        if name in self.hbox:
+            return self.hbox[name]
+
+        size = (self.size[0], self.size[1] / self.rows)
+        hbox = HBox(size)
+        self.hbox[name] = hbox
+        self.widgets.append(hbox)
+        return hbox
+
     def add_plugin(self, name, index, kwargs):
         log = logging.getLogger('%s/%s' % (name, index))
 
@@ -126,8 +141,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             # Allocate new plugin
             plugin = mod.factory()
             plugin.log = log
-            plugin.on_resize((self.size[0], self.size[1] / self.rows))
             attr_table = plugin.attributes()
+
+            # Find ev. hbox
+            hbox = self.get_hbox(kwargs.pop('hbox', None))
 
             # Set all attributes
             for attr in attr_table.values():
@@ -148,7 +165,14 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
                 plugin.log.warning('No such attribute: %s', attr)
 
             plugin.log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
-            self.plugins.append((plugin,mod))
+
+            if not hbox:
+                size = (self.size[0], self.size[1] / self.rows)
+                frame = Frame(plugin, size)
+                self.widgets.append(frame)
+            else:
+                hbox.add_child(plugin)
+            self.plugins.append((plugin, mod))
         except:
             traceback.print_exc()
             print >> sys.stderr, 'When trying to add plugin %s' % name
@@ -158,9 +182,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def init_all_plugins(self):
         for plugin, mod in self.plugins:
             self.init_plugin(plugin)
+        while len(self.widgets) < self.rows:
+            self.widgets.append(Blank())
 
     def init_plugin(self, plugin):
-        plugin._last_render = 0
         req = getattr(plugin, 'dataset', [])
         for ds in req:
             if not ds in self.dataset:
@@ -192,11 +217,12 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             w = widget.allocation.width
             h = widget.allocation.height / self.rows
             self.size = (widget.allocation.width, widget.allocation.height)
-            for plugin, mod in self.plugins:
-                plugin.on_resize((w,h))
+            t = time.time()
+            for container in self.widgets:
+                container.on_resize((w,h))
 
                 # Force a rerender of plugin.
-                plugin.render()
+                container.render(t)
 
             # Create widget for displaying messages'
             self.msgwidget = MessageWidget(size=(self.size[0], 70))
@@ -228,7 +254,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         if self.transition_step > 1.0:
             self.transition_enabled = False
             self.transition_step = 0.0
-            self.current = (self.current + 1) % max(self.rows, len(self.plugins))
+            self.current = (self.current + 1) % max(self.rows, len(self.widgets))
             return
 
         # the value is allowed to be > 1.0 (clamped when used) so 1.0 will
@@ -242,28 +268,17 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def write_message(self, text):
         self.msgwidget.write(text)
 
-    def render_plugins(self, plugins):
+    def render_widgets(self, widgets):
         glViewport (0, 0, self.allocation.width, self.allocation.height / self.rows)
 
         t = time.time()
-        for plugin, mod in self.plugins:
-            if plugin.framerate == 0:
-                # render every frame
-                plugin.invalidate()
-            elif plugin.framerate > 0:
-                # render at fixed framerate
-                frac = 1.0 / plugin.framerate
-                if t - plugin._last_render >= frac:
-                    plugin.invalidate()
-
+        for container in self.widgets:
             try:
-                with plugin:
-                    if plugin.render():
-                        plugin._last_render = t
+                container.render(t)
             except:
                 traceback.print_exc()
 
-    def render_screen(self, plugins):
+    def render_screen(self, widgets):
         glViewport (0, 0, self.allocation.width, self.allocation.height)
         glClearColor(1,0,1,1)
         glClear(GL_COLOR_BUFFER_BIT)
@@ -275,15 +290,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         glTranslate(0, offset, 0)
         glScale(1, 1.0 / self.rows, 1)
 
-        for i, (plugin, mod) in enumerate(plugins):
-            if plugin is not None:
-                plugin.bind_texture()
-                glColor(1,1,1,1)
-            else:
-                glBindTexture(GL_TEXTURE_2D, 0)
-                glColor(0,0,0,1)
-
-            glDrawArrays(GL_QUADS, 0, 4)
+        for container in widgets:
+            container.blit()
             glTranslate(0, 1, 0)
 
         glPopMatrix()
@@ -305,10 +313,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
     def render(self):
         self.frames += 1
-        plugins = self.visible_plugins()
+        widgets = self.visible_widgets()
 
         with self.drawable() as gldrawable:
-            self.render_plugins(plugins)
+            self.render_widgets(widgets)
 
             self.vbo.bind()
             glEnableClientState(GL_VERTEX_ARRAY)
@@ -316,7 +324,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             glVertexPointer(2,   GL_FLOAT, 4*4, c_void_p(0))
             glTexCoordPointer(2, GL_FLOAT, 4*4, c_void_p(2*4))
 
-            self.render_screen(plugins)
+            self.render_screen(widgets)
             self.render_message()
 
             glDisableClientState(GL_TEXTURE_COORD_ARRAY)
@@ -328,13 +336,17 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             else:
                 glFlush()
 
-    def visible_plugins(self):
-        # this block of code gets N plugins from the list (padding if len < N)
-        # and wrapping the list when needed
+    def visible_rows(self):
+        n = self.rows
+        if self.transition_enabled:
+            n += 1
+        return n
+
+    def visible_widgets(self):
+        # this block of code gets N plugins from the list, wrapping when needed.
         cur = self.current
-        rows = self.rows + 1 # during a transition one extra row is visible
-        pad = self.plugins + [(None,None)]*(self.rows-len(self.plugins)) # pad list to number of rows
-        plugins = pad[cur:cur+rows]
+        rows = self.visible_rows()
+        plugins = self.widgets[cur:cur+rows]
         if len(plugins) < rows:
-            plugins += pad[:rows-len(plugins)]
+            plugins += self.widgets[:rows-len(plugins)]
         return plugins

@@ -60,6 +60,7 @@ class PluginBase(object):
         self.filter = {}
         self.dataset = []
         self._invalidated = True
+        self._last_render = 0
 
         methods = inspect.getmembers(self, lambda x: inspect.ismethod(x) and hasattr(x, '_attribute'))
         self._attributes = dict([(func._attribute.name, func._attribute) for name, func in methods])
@@ -132,7 +133,12 @@ class PluginBase(object):
     def invalidate(self):
         self._invalidated = True
 
-    def is_invalidated(self):
+    def is_invalidated(self, t):
+        if self.framerate > 0:
+            frac = 1.0 / self.framerate
+            dt = t - self._last_render
+            if dt >= frac: return True
+
         return self._invalidated
 
     def on_packet(self, stream, frame):
@@ -158,12 +164,12 @@ class PluginCairo(PluginBase, Cairo):
     def on_resize(self, size):
         Cairo.on_resize(self, size)
 
-    def render(self):
-        if not self.is_invalidated():
+    def render(self, t):
+        if not self.is_invalidated(t):
             return False
 
         Cairo.render(self)
-        return True
+        self._last_render = t
 
 class PluginOpenGL(PluginBase, Framebuffer):
     def __init__(self):
@@ -173,12 +179,12 @@ class PluginOpenGL(PluginBase, Framebuffer):
     def on_resize(self, size):
         Framebuffer.on_resize(self, size)
 
-    def render(self):
-        if not self.invalidated():
+    def render(self, t):
+        if not self.is_invalidated(t):
             return False
 
         Framebuffer.render(self)
-        return True
+        self._last_render = t
 
 def trim(docstring):
     """Parse docstring. From python docs."""
