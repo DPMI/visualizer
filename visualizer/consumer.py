@@ -143,6 +143,10 @@ class Consumer(object):
         if self.sock is None: return None
         return self.sock.fileno()
 
+class Fifo:
+    def __init__(self, addr, iface):
+        pass
+
 class Process:
     def __init__(self, command, dataset, fifo, index):
         self.command = shlex.split(command)

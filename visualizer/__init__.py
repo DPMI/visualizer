@@ -59,6 +59,7 @@ class Main:
         self.consumers = []
         self.dataset = {}
         self.filename = filename
+        self.fifo = {}
 
         # config defaults
         self.transition = config.getint('general', 'transition', Main.transition)
@@ -112,6 +113,14 @@ class Main:
 
         # retrieve datasets from consumers
         self.load_dataset()
+
+        print
+        if len(self.fifo) > 0:
+            print 'Available FIFOs'
+            print '---------------'
+            for k, v in self.fifo.iteritems():
+                print ' * %s: %s' % (k, v)
+            print
 
         if len(self.consumers) > 0:
             print 'Available consumers'
@@ -261,6 +270,9 @@ class Main:
     def add_consumer(self, consumer):
         self.consumers.append(consumer)
 
+    def add_fifo(self, key, attrib):
+        self.fifo[key] = consumer.Fifo(**attrib)
+
     def parse_attrib(self, attrib):
         global re_attrib
 
@@ -317,6 +329,9 @@ class Main:
 
             if ns == 'plugin':
                 self.visualizer.add_plugin(key, index, a)
+
+            if ns == 'fifo':
+                self.add_fifo(index, a)
 
             if ns == 'hbox':
                 hbox = self.visualizer.get_hbox(index)
