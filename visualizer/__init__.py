@@ -181,7 +181,7 @@ class Main:
         return True
 
     def destroy(self, widget, data=None):
-        gtk.quit()
+        self.quit()
 
     def on_main_window_state_event(self, window, event):
         self.fullscreen = bool(gtk.gdk.WINDOW_STATE_FULLSCREEN & event.new_window_state)
