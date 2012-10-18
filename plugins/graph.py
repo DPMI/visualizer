@@ -94,7 +94,7 @@ class Graph(PluginCairo):
             div = 1.0
             if len(p) >= 2: div = float(p[1])
             self.auto = div
-            value = max(self.size[0] - self.margin[1] - self.margin[3]) / div, 1)
+            value = max((self.size[0] - self.margin[1] - self.margin[3]) / div, 1)
 
         self.data = numpy.array([0]*int(value), numpy.float)
         self.n_samples = int(value)
