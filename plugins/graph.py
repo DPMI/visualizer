@@ -9,12 +9,14 @@ import math
 name = 'NPL Graph plugin'
 author = ('David Sveningsson', 'dsv@bth.se')
 date = '2011-09-29'
-version = 0
+version = 1
 api = 1
 
 def csv_filter(value):
     for line in value.splitlines():
         yield tuple([float(x.strip('\x00')) for x in line.split(';')])
+
+clamp = lambda v,a,b: min(max(v,a),b)
 
 class Graph(PluginCairo):
     framerate = 1
@@ -97,6 +99,7 @@ class Graph(PluginCairo):
             value = max((self.size[0] - self.margin[1] - self.margin[3]) / div, 1)
 
         self.data = numpy.array([0]*int(value), numpy.float)
+        self.data.fill(self.normalize(0))
         self.n_samples = int(value)
         self.pos = 0
 
@@ -115,15 +118,18 @@ class Graph(PluginCairo):
         # calculate where in the range value lies
         s = (value - lower) / span
 
-        # height (in pixels)
-        height = self.size[1] - self.margin[0] - self.margin[2]
+        # height (in pixels). -2 to fit inside border
+        height = self.size[1] - self.margin[0] - self.margin[2] - 2
 
-        return height - (height * s)
+        return 1+height - (height * s)
 
     def on_data(self, dataset, raw):
         delta = float(abs(self._range_x[0])) / self.n_samples
         flt = self.filter[dataset]
         for timestamp, value in flt(raw):
+            # clamp to y-axis range.
+            value = clamp(value, self._range_y[0], self._range_y[1])
+
             if not self.offset: # first run
                 self.offset = timestamp
                 self.iteration = 1
@@ -139,10 +145,7 @@ class Graph(PluginCairo):
                     self.pos += 1
                     self.pos %= self.n_samples
                     self.iteration = 1
-                    if n == 1:
-                        self.data[self.pos] = 0
-                    else:
-                        self.data[self.pos] = prev
+                    self.data[self.pos] = prev
                     self.offset += delta
                     n -= 1
 
@@ -238,8 +241,10 @@ class Graph(PluginCairo):
         cr.move_to(n, self.data[c])
         while True:
             n += dx
+            cr.line_to(n, self.data[c])
+
             c = (c+1)%self.n_samples
-            if c == self.pos: break
+            if (c+1)%self.n_samples == self.pos: break
 
             cr.line_to(n, self.data[c])
         cr.stroke()

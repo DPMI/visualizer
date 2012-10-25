@@ -11,7 +11,7 @@ import subprocess
 import shlex
 import errno
 import logging
-from select import select
+from select import select, poll
 
 consumer_log = logging.getLogger('consumer')
 fifo_log = logging.getLogger('fifo')
@@ -162,6 +162,8 @@ class Process:
     def connect(self):
         try:
             self.proc = subprocess.Popen(self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.poller = poll()
+            self.poller.register(self.proc.stdout)
             self.log.info('Opened process %d as "%s"', self.proc.pid, ' '.join(self.command))
             self.log.info('Dataset "%s" is available', self.dataset[0])
         except Exception, e:
@@ -174,7 +176,20 @@ class Process:
     def subscribe(self, dataset, callback):
         self.callback.append(callback)
 
+    def poll(self, timeout=0):
+        return self.poller.poll(timeout)
+
     def pull(self):
-        data = self.proc.stdout.readline().strip()
-        for func in self.callback:
-            func(self.dataset[0], data)
+        n = 1000
+        while n > 0:
+            n -= 1
+
+            events = self.poll()
+            if len(events) == 0:
+                break
+
+            data = self.proc.stdout.readline().strip()
+            for func in self.callback:
+                func(self.dataset[0], data)
+        if n == 0:
+            self.log.warning('possible data overflow on, your computer might be running slow.')
