@@ -132,7 +132,7 @@ class Consumer(object):
         result = result.split(' ')
 
         if int(result[1]) != 200:
-            self.log.info('Request failed:', ' '.join(result))
+            self.log.info('Request failed: %s', ' '.join(result))
             raise httplib.BadStatusLine(' '.join(result))
 
         response = FeedParser()
