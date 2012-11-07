@@ -168,7 +168,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
 
             if not hbox:
                 size = (self.size[0], self.size[1] / self.rows)
-                frame = Frame(plugin, size)
+                frame = Frame(plugin, mod, size)
                 self.widgets.append(frame)
             else:
                 hbox.add_child(plugin)
