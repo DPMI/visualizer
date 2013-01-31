@@ -1,13 +1,13 @@
 from visualizer.plugin import PluginCairo, attribute
 import cairo
 
-name = 'NPL Static Image content plugin'
-author = ('David Sveningsson', 'dsv@bth.se')
-date = '2011-08-15'
-version = 0
+name = 'Static image content plugin'
+author = ('David Sveningsson', 'ext@sidvind.com')
+date = '2013-01-31'
+version = 2
 api = 1
 
-class StaticContent(PluginCairo):
+class ImagePlugin(PluginCairo):
     framerate = -1
 
     @attribute(type=str)
@@ -48,7 +48,7 @@ class StaticContent(PluginCairo):
         self.cr.paint()
 
 def factory(**kwargs):
-    item = StaticContent()
+    item = ImagePlugin()
     for key, value in kwargs.items():
         getattr(item, key)(value)
     return item
