@@ -8,13 +8,15 @@ version = 2
 api = 1
 
 class ImagePlugin(PluginCairo):
+    """Render a static image"""
+
     framerate = -1
 
-    @attribute(type=str)
-    def text_font(self, value):
-        self.font = PluginCairo.create_font(raw=value)
+    # added so it wont show up in help
+    def source(self):
+        pass
 
-    @attribute(type=str)
+    @attribute(type=str, sample="sample.png")
     def filename(self, value):
         self.content = cairo.ImageSurface.create_from_png(value)
         self.imgw=self.content.get_width()
@@ -29,7 +31,6 @@ class ImagePlugin(PluginCairo):
         self.imgh = 0
         self.imgscale = 0
         self.imgxpos = 0
-        self.font = PluginCairo.create_font(self.cr, size=16)
 
     def on_resize(self, size):
         PluginCairo.on_resize(self, size)
