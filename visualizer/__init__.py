@@ -335,7 +335,7 @@ def run():
     print >> sys.stderr
     print >> sys.stderr, '#' * 60
     print >> sys.stderr, 'DPMI Visualizer 0.7'
-    print >> sys.stderr, '(c) 2011 David Sveningsson <dsv@bth.se>'
+    print >> sys.stderr, '(c) 2011-2013 David Sveningsson <ext@sidvind.com>'
     print >> sys.stderr, 'GNU GPLv3'
     print >> sys.stderr
 

@@ -1,20 +1,22 @@
 from visualizer.plugin import PluginCairo, attribute
 import cairo
 
-name = 'NPL Static Image content plugin'
-author = ('David Sveningsson', 'dsv@bth.se')
-date = '2011-08-15'
-version = 0
+name = 'Static image content plugin'
+author = ('David Sveningsson', 'ext@sidvind.com')
+date = '2013-01-31'
+version = 2
 api = 1
 
-class StaticContent(PluginCairo):
+class ImagePlugin(PluginCairo):
+    """Render a static image"""
+
     framerate = -1
 
-    @attribute(type=str)
-    def text_font(self, value):
-        self.font = PluginCairo.create_font(raw=value)
+    # added so it wont show up in help
+    def source(self):
+        pass
 
-    @attribute(type=str)
+    @attribute(type=str, sample="sample.png")
     def filename(self, value):
         self.content = cairo.ImageSurface.create_from_png(value)
         self.imgw=self.content.get_width()
@@ -29,7 +31,6 @@ class StaticContent(PluginCairo):
         self.imgh = 0
         self.imgscale = 0
         self.imgxpos = 0
-        self.font = PluginCairo.create_font(self.cr, size=16)
 
     def on_resize(self, size):
         PluginCairo.on_resize(self, size)
@@ -48,7 +49,7 @@ class StaticContent(PluginCairo):
         self.cr.paint()
 
 def factory(**kwargs):
-    item = StaticContent()
+    item = ImagePlugin()
     for key, value in kwargs.items():
         getattr(item, key)(value)
     return item
