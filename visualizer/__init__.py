@@ -313,7 +313,10 @@ class Main:
                 self.add_consumer(con)
 
             if ns == 'plugin':
-                self.visualizer.add_plugin(key, index, a)
+                try:
+                    self.visualizer.add_plugin(key, index, a)
+                except Exception, e:
+                    self.log.error('failed to add plugin %s/%s: %s', key, index, e)
 
             if ns == 'hbox':
                 hbox = self.visualizer.get_hbox(index)
