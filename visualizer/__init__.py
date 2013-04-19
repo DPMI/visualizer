@@ -163,7 +163,9 @@ class Main:
         self.parse_config(config)
         self.load_dataset()
         self.visualizer.dataset = self.dataset # fulhack
+        self.visualizer.rows = config.getint('general', 'rows', Main.rows)
         self.visualizer.init_all_plugins()
+        self.visualizer.resize()
         self.visualizer.write_message('Reloaded config')
 
     def handle_sigint(self, *args):
