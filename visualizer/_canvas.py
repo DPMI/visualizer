@@ -119,7 +119,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             return self.hbox[name]
 
         size = (self.size[0], self.size[1] / self.rows)
-        hbox = HBox(size)
+        hbox = HBox('hbox/%s' % name, size)
         self.hbox[name] = hbox
         self.widgets.append(hbox)
         return hbox

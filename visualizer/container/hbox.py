@@ -1,10 +1,12 @@
 from . import container
 from OpenGL.GL import *
+import logging
 
 class HBox(container.Container):
     framerate = 0
 
-    def __init__(self, size):
+    def __init__(self, name, size):
+        self.log = logging.getLogger(name)
         self.children = []
         self.size = size
         self.width = None
