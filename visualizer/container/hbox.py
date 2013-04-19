@@ -41,10 +41,11 @@ class HBox(container.Container):
             plugin.render(t)
 
     def blit(self):
+        assert len(self.children) == len(self.factors)
+
         glPushMatrix()
         glColor(1,1,1,1)
 
-        assert len(self.children) == len(self.factors)
         for plugin, factor in zip(self.children, self.factors):
             glPushMatrix()
             glScale(factor, 1, 1)
