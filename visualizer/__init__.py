@@ -52,6 +52,7 @@ class ConfigParser(configparser.SafeConfigParser):
 class Main:
     cursor_timeout = 2000 # delay in ms until hiding cursor
     transition = 15
+    rows = 3
 
     def __init__(self, config, filename):
         self.log = logging.getLogger('main')
@@ -61,7 +62,8 @@ class Main:
         self.filename = filename
 
         # config defaults
-        self.transition = config.getint('general', 'transition', Main.transition)
+        transition = config.getint('general', 'transition', Main.transition)
+        rows = config.getint('general', 'rows', Main.rows)
         self.fullscreen = config.getboolean('general', 'fullscreen', False)
 
         # Create window and get widget handles.
@@ -87,7 +89,7 @@ class Main:
 
         # setup visualizer
         self.log.debug('Creating canvas')
-        self.visualizer = Canvas(size=size, transition_time=self.transition)
+        self.visualizer = Canvas(size=size, rows=rows, transition_time=transition)
         self.visualizer.connect('motion_notify_event', self.cursor_show)
         self.area.pack_start(self.visualizer)
         self.window.show_all()

@@ -72,11 +72,11 @@ class GLContext:
         return False # exceptions should propagate
 
 class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
-    def __init__(self, size, transition_time=15):
+    def __init__(self, size, rows=3, transition_time=15):
         gtk.DrawingArea.__init__(self)
 
         self.size = size
-        self.rows = 3
+        self.rows = rows
         self.plugins = []
         self.widgets = []
         self.hbox = {}
