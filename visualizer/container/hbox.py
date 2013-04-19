@@ -21,9 +21,16 @@ class HBox(container.Container):
 
     def add_child(self, plugin):
         self.children.append(plugin)
-        self.do_resize()
+
         if not self.width:
             self.factors = [1.0 / len(self.children)] * len(self.children)
+        else:
+            # manually set factors, ensure we have enough of them
+            if len(self.children) > len(self.factors):
+                self.log.error('Overfull hbox, excessive children will not be visible')
+                self.factors.append(0.0)
+
+        self.do_resize()
 
     def do_resize(self):
         width = [int(self.size[0] * x) for x in self.factors]
@@ -43,8 +50,6 @@ class HBox(container.Container):
             plugin.render(t)
 
     def blit(self):
-        assert len(self.children) == len(self.factors)
-
         glPushMatrix()
         glColor(1,1,1,1)
 
