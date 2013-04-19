@@ -177,7 +177,10 @@ class Main:
         num_consumers = len(self.consumers)
         connected_consumers = len([x for x in self.consumers if x.fileno()])
 
-        self.stats.update(consumers=(connected_consumers, num_consumers))
+        self.stats.update(
+            consumers=(connected_consumers, num_consumers),
+            framerate=self.visualizer.framerate,
+        )
         return True
 
     def destroy(self, widget, data=None):

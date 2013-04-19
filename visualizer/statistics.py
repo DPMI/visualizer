@@ -24,7 +24,7 @@ class Statistics(object):
         for func in self.callback:
             func(self.dataset[0], self.data)
 
-    def update(self, consumers):
+    def update(self, consumers, framerate):
         current_time = time.time()
         uptime = int(current_time - self.start_time)
         m, s = divmod(uptime, 60)
@@ -34,8 +34,9 @@ class Statistics(object):
         self.data = [
             ('Time', time.strftime("%d %b %Y %H:%M %Z", time.localtime(current_time))),
             ('Uptime', '%dd %02d:%02d' % (d,h,m)),
-            ('Consumers', '%d / %d' % consumers)
-            ]
+            ('Consumers', '%d / %d' % consumers),
+            ('Framerate', framerate),
+        ]
         os.write(self.pipe[1], '1')
 
     def __str__(self):

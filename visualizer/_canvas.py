@@ -82,7 +82,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.hbox = {}
         self.dataset = []
         self.current = 0
-        self.frames = 0
+        self.frames = 0                 # frame counter (resets every 1s)
+        self.framerate = 0              # current framerate
         self.transition_step = 0.0
         self.transition_enabled = False # @note should make a FSM
         self.msgwidget = None
@@ -241,7 +242,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         return True
 
     def framerate_expire(self):
-        print 'FPS:', self.frames
+        self.framerate = self.frames
         self.frames = 0
         return True
 
