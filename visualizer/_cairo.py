@@ -67,12 +67,16 @@ class Cairo(object):
     def on_resize(self, size):
         self.size = size
         self.width, self.height = size
-        self._generate_surface()
+
+        if self.width * self.height > 0:
+            self._generate_surface()
 
     def do_render(self):
         raise NotImplementedError
 
     def render(self):
+        if self.width * self.height == 0: return
+
         self.do_render()
         glBindTexture(GL_TEXTURE_2D, self._texture)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_BGRA, GL_UNSIGNED_BYTE, self._data.tostring());
