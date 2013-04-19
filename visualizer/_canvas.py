@@ -291,7 +291,10 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         glScale(1, 1.0 / self.rows, 1)
 
         for container in widgets:
-            container.blit()
+            try:
+                container.blit()
+            except:
+                traceback.print_exc()
             glTranslate(0, 1, 0)
 
         glPopMatrix()
