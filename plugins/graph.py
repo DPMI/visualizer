@@ -233,6 +233,7 @@ class Graph(PluginCairo):
         cr.save()
         cr.translate(0, self.margin[0])
         cr.set_source_rgba(0,0,0,1)
+        cr.set_line_width(1.0)
 
         w = self.size[0] - self.margin[1] - self.margin[3]
         dx = float(w) / (self.n_samples-2) # -1 because, and -1 because the latest sample isn't finished yet
