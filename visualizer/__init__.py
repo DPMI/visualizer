@@ -62,7 +62,6 @@ class Main:
         self.filename = filename
 
         # config defaults
-        transition = config.getint('general', 'transition', Main.transition)
         rows = config.getint('general', 'rows', Main.rows)
         self.fullscreen = config.getboolean('general', 'fullscreen', False)
 
@@ -89,7 +88,7 @@ class Main:
 
         # setup visualizer
         self.log.debug('Creating canvas')
-        self.visualizer = Canvas(size=size, rows=rows, transition_time=transition)
+        self.visualizer = Canvas(size=size, rows=rows)
         self.visualizer.connect('motion_notify_event', self.cursor_show)
         self.area.pack_start(self.visualizer)
         self.window.show_all()
@@ -286,6 +285,10 @@ class Main:
         return d
 
     def parse_config(self, config):
+        # general config
+        self.visualizer.set_transition(config)
+
+        # plugins and consumers
         pattern = re.compile('(?:(\w+):)?(\w+)(?:/(\w+))?')
         for section in config.sections():
             x = pattern.match(section)

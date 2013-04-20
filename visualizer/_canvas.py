@@ -84,6 +84,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.current = 0
         self.frames = 0                 # frame counter (resets every 1s)
         self.framerate = 0              # current framerate
+        self.transition_timer = None    # id of timer
         self.transition_step = 0.0
         self.transition_enabled = False # @note should make a FSM
         self.msgwidget = None
@@ -98,7 +99,6 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect('configure_event', self.configure)
         self.connect('expose_event',    self.expose)
         gobject.timeout_add(1000/50, self.expire)
-        gobject.timeout_add(transition_time * 1000, self.transition)
         gobject.timeout_add(1000, self.framerate_expire)
 
         # Create VBO
@@ -246,7 +246,33 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.frames = 0
         return True
 
+    def set_transition(self, config):
+        global logging
+        log = logging.getLogger('canvas')
+
+        if config.has_option('general', 'transition'):
+            log.warning('Old style transition set, please migrate to new options (see documentation)')
+            t = config.getfloat('general', 'transition', 15.0)
+            d = 1.5
+        else:
+            t = config.getfloat('transition', 'time', 15.0)
+            d = config.getfloat('transition', 'duration', 1.5)
+
+        if t < d:
+            log.warning('transition time is less than duration, setting t = d')
+            t = d
+
+        if self.transition_timer:
+            gobject.source_remove(self.transition_timer)
+        self.transition_timer = gobject.timeout_add(int(t * 1000), self.transition)
+        self.transition_duration = d
+
     def transition(self):
+        # lagging or to short, reset
+        if self.transition_enabled:
+            self.current = (self.current + 1) % max(self.rows, len(self.widgets))
+            self.transition_step = 0.0
+
         self.transition_enabled = True
         self.transition_time = time.time()
         return True
@@ -261,7 +287,8 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         # the value is allowed to be > 1.0 (clamped when used) so 1.0 will
         # actually be rendered.
 
-        self.transition_step = ((time.time() - self.transition_time) / 1.5) ** 3
+        s = (time.time() - self.transition_time) / self.transition_duration
+        self.transition_step = s ** 3.5 # lean-in
 
     def expose(self, widget, event=None):
         self.render()
