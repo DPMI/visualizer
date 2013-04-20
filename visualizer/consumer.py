@@ -156,7 +156,11 @@ class Process:
 
     def fileno(self):
         if self.proc is None: return None
-        if self.proc.poll() is not None: return None
+        if self.proc.poll() is not None:
+            self.log.error('Process exited prematurely with code %d:', self.proc.returncode)
+            for line in self.proc.stderr.readlines():
+                self.log.error('    %s', line.rstrip())
+            return None
         return self.proc.stdout.fileno()
 
     def connect(self):
