@@ -174,7 +174,7 @@ class PluginCairo(PluginBase, Cairo):
 class PluginOpenGL(PluginBase, Framebuffer):
     def __init__(self):
         PluginBase.__init__(self)
-        Framebuffer.__init__(self, (1,1))
+        Framebuffer.__init__(self)
 
     def on_resize(self, size):
         Framebuffer.on_resize(self, size)
