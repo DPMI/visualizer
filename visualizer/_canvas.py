@@ -165,6 +165,9 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             for attr in kwargs.keys():
                 plugin.log.warning('No such attribute: %s', attr)
 
+            # Initialize plugin
+            plugin.init()
+
             plugin.log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
 
             if not hbox:

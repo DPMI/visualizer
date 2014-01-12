@@ -141,6 +141,10 @@ class PluginBase(object):
 
         return self._invalidated
 
+    # Called after all attributes has been setup
+    def init(self):
+        pass # do nothing
+
     def on_packet(self, stream, frame):
         pass # do nothing
 
