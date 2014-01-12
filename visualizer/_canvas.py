@@ -98,7 +98,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect_after('realize',   self.realize)
         self.connect('configure_event', self.configure)
         self.connect('expose_event',    self.expose)
-        gobject.timeout_add(1000/50, self.expire)
+        gobject.timeout_add(1000/60, self.expire)
         gobject.timeout_add(1000, self.framerate_expire)
 
         # Create VBO

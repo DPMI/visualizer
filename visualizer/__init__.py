@@ -207,7 +207,7 @@ class Main:
 
     def expire(self, *args):
         try:
-            timeout = 0.1
+            timeout = 0.005 # 5 ms
             if self.visualizer.transition_enabled:
                 timeout = 0
 
