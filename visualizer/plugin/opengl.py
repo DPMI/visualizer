@@ -47,6 +47,8 @@ class PluginOpenGL(PluginBase):
         raise ValueError, '%s is not a valid shader type' % str
 
     def create_shader(self, **source):
+        if not glCreateProgram:
+            raise RuntimeError, 'Hardware does not support glCreateProgram'
         program = glCreateProgram()
 
         for k, v in source.iteritems():
