@@ -42,7 +42,7 @@ Consumers from DPMI reads packet traces, analyzes the data and generates some fo
 
 A generator is a stub consumer, mostly just generating random data for testing purposes but it can also give a prerecorded set of data.
 
-### Writing plugins
+## Writing plugins
 
 Each plugin is its own file and must contain a few objects:
 
