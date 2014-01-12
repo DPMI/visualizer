@@ -138,6 +138,8 @@ class PluginBase(object):
             frac = 1.0 / self.framerate
             dt = t - self._last_render
             if dt >= frac: return True
+        elif self.framerate == 0:
+            return True
 
         return self._invalidated
 
