@@ -98,7 +98,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect_after('realize',   self.realize)
         self.connect('configure_event', self.configure)
         self.connect('expose_event',    self.expose)
-        gobject.timeout_add(1000/50, self.expire)
+        gobject.timeout_add(1000/60, self.expire)
         gobject.timeout_add(1000, self.framerate_expire)
 
         # Create VBO
@@ -164,6 +164,9 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             # Warn about unused variables
             for attr in kwargs.keys():
                 plugin.log.warning('No such attribute: %s', attr)
+
+            # Initialize plugin
+            plugin.init()
 
             plugin.log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
 
