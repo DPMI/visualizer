@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, re
 import imp
 import traceback
 from OpenGL.GL import *
@@ -250,7 +250,10 @@ def usage(name):
         info[0].close()
 
 def available():
+    ignore = re.compile('sample_|stub')
     for plugin in [os.path.splitext(os.path.basename(x))[0] for x in glob('plugins/*.py')]:
+        if ignore.match(plugin) is not None: continue
+
         info = imp.find_module(plugin, ['plugins'])
         try:
             mod = imp.load_module('_vis_usage_%s' % plugin, *info)
