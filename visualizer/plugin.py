@@ -200,6 +200,9 @@ class PluginOpenGL(PluginBase):
             self.do_render()
         self._last_render = t
 
+    def clear(self, *color):
+        self.__fbo.clear(*color)
+
 def trim(docstring):
     """Parse docstring. From python docs."""
     if not docstring:
