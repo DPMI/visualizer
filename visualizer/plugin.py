@@ -156,6 +156,9 @@ class PluginBase(object):
     def render(self):
         raise NotImplementedError
 
+    def bind_texture(self):
+        raise NotImplementedError
+
 class PluginCairo(PluginBase, Cairo):
     def __init__(self):
         PluginBase.__init__(self)
@@ -163,6 +166,9 @@ class PluginCairo(PluginBase, Cairo):
 
     def on_resize(self, size):
         Cairo.on_resize(self, size)
+
+    def bind_texture(self):
+        Cairo.bind_texture(self)
 
     def render(self, t):
         if not self.is_invalidated(t):
