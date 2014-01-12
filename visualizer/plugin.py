@@ -153,7 +153,7 @@ class PluginBase(object):
     def on_resize(self, size):
         raise NotImplementedError
 
-    def render(self):
+    def render(self, t):
         raise NotImplementedError
 
     def bind_texture(self):
