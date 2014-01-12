@@ -4,6 +4,8 @@ from threading import Lock
 import inspect
 import functools
 
+# Base class for plugins defining API v1.
+
 class PluginBase(object):
     # Rendering framerate
     #    -1: Static content, only rendered once
@@ -109,14 +111,19 @@ class PluginBase(object):
     def on_update(self, consumer):
         pass # do nothing
 
+    # Return list of all available attributes
     def attributes(self):
         return self._attributes
 
+    # Called when canvas is resized
     def on_resize(self, size):
         raise NotImplementedError
 
+    # Called every frame to render.
+    # This function should handle invalidation itself
     def render(self, t):
         raise NotImplementedError
 
+    # Called by core before blitting onto window
     def bind_texture(self):
         raise NotImplementedError
