@@ -211,6 +211,40 @@ class PluginOpenGL(PluginBase):
     def clear(self, *color):
         self.__fbo.clear(*color)
 
+    def print_shader_log(self, obj):
+        if glIsShader(obj):
+            raw = glGetShaderInfoLog(obj)
+        else:
+            raw = glGetProgramInfoLog(obj)
+
+        for line in raw.splitlines():
+            self.log.error(raw)
+
+    @staticmethod
+    def shader_type(str):
+        if str == 'vertex': return GL_VERTEX_SHADER
+        if str == 'fragment': return GL_FRAGMENT_SHADER
+        if str == 'geometry': return GL_GEOMETRY_SHADER
+        raise ValueError, '%s is not a valid shader type' % str
+
+    def create_shader(self, **source):
+        program = glCreateProgram()
+
+        for k, v in source.iteritems():
+            type = PluginOpenGL.shader_type(k)
+            shader = glCreateShader(type)
+
+            glShaderSource(shader, v)
+            glCompileShader(shader)
+            glAttachShader(program, shader)
+
+            self.print_shader_log(shader)
+
+        glLinkProgram(program)
+        self.print_shader_log(program)
+
+        return program
+
 def trim(docstring):
     """Parse docstring. From python docs."""
     if not docstring:
