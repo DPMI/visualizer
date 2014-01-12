@@ -182,6 +182,7 @@ class PluginCairo(PluginBase, Cairo):
 
         Cairo.render(self)
         self._last_render = t
+        self._invalidated = False
 
 class PluginOpenGL(PluginBase):
     def __init__(self):
@@ -205,6 +206,7 @@ class PluginOpenGL(PluginBase):
         with self.__fbo:
             self.do_render()
         self._last_render = t
+        self._invalidated = False
 
     def clear(self, *color):
         self.__fbo.clear(*color)
