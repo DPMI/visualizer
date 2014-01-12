@@ -1,3 +1,6 @@
+from OpenGL.GL import *
+from OpenGL.GL.framebufferobjects import *
+
 class Framebuffer(object):
     def __init__(self):
         self._fbo = None
@@ -5,14 +8,8 @@ class Framebuffer(object):
         self._current = 0
         self._generate_framebuffer((1,1))
 
-    def on_resize(self, size):
+    def resize(self, size):
         self._generate_framebuffer(size)
-
-    def render(self):
-        glBindFramebuffer(GL_FRAMEBUFFER, self._fbo[self._current])
-        self.on_render()
-        glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        self._current = 1 - self._current
 
     def bind_texture(self):
         glBindTexture(GL_TEXTURE_2D, self._texture[self._current])
@@ -44,3 +41,11 @@ class Framebuffer(object):
             glClear(GL_COLOR_BUFFER_BIT)
         finally:
             glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+    def __enter__(self):
+        glBindFramebuffer(GL_FRAMEBUFFER, self._fbo[self._current])
+        return self
+
+    def __exit__(self, type, value, traceback):
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+        self._current = 1 - self._current

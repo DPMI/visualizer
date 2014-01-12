@@ -177,19 +177,27 @@ class PluginCairo(PluginBase, Cairo):
         Cairo.render(self)
         self._last_render = t
 
-class PluginOpenGL(PluginBase, Framebuffer):
+class PluginOpenGL(PluginBase):
     def __init__(self):
         PluginBase.__init__(self)
-        Framebuffer.__init__(self)
+        self.__fbo = self.create_fbo()
+
+    # Creates a framebuffer, override this if you need a custom format, etc
+    def create_fbo(self):
+        return Framebuffer()
 
     def on_resize(self, size):
-        Framebuffer.on_resize(self, size)
+        self.__fbo.resize(size)
+
+    def bind_texture(self):
+        self.__fbo.bind_texture()
 
     def render(self, t):
         if not self.is_invalidated(t):
             return False
 
-        Framebuffer.render(self)
+        with self.__fbo:
+            self.do_render()
         self._last_render = t
 
 def trim(docstring):
