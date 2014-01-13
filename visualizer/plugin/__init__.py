@@ -41,7 +41,7 @@ def usage(name):
         return
 
     try:
-        mod = imp.load_module('_vis_usage_%s' % name, *info)
+        mod = imp.load_module(name, *info)
         plugin = mod.factory()
         if not hasattr(mod, 'name'):
             print 'No such plugin:', name
@@ -77,7 +77,7 @@ def available():
 
         info = imp.find_module(plugin, ['plugins'])
         try:
-            mod = imp.load_module('_vis_usage_%s' % plugin, *info)
+            mod = imp.load_module(plugin, *info)
             if not hasattr(mod, 'name'): continue
             yield (plugin, mod.name)
         except:

@@ -134,7 +134,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             return
 
         try:
-            mod = imp.load_module('_vis__%s' % name, *info)
+            mod = imp.load_module(name, *info)
 
             if not hasattr(mod, 'api'):
                 log.error('Plugin does not define API')
