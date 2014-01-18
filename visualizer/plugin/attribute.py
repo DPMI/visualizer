@@ -3,6 +3,11 @@ class color:
     pass
 
 class Attribute():
+    # @param name Name of this attribute
+    # @param type Datatype
+    # @param default Default value (only used if auto is true)
+    # @param sample String used for documentation, should be valid configuration.
+    # @param auto If false, the attribute isn't initialized using default value.
     def __init__(self, func, name=None, type=None, default=None, sample=None, auto=True):
         self.func = func
         self.name = name is not None and name or func.__name__
