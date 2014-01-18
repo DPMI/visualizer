@@ -20,6 +20,7 @@ from ctypes import c_void_p
 import consumer
 from _cairo import CairoWidget
 from container import Frame, HBox, Blank
+from plugin import load as load_plugin
 
 class MessageWidget(CairoWidget):
     html_escape_table = {
@@ -126,62 +127,20 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         return hbox
 
     def add_plugin(self, name, index, kwargs):
-        log = logging.getLogger('%s/%s' % (name, index))
+        # Find ev. hbox
+        hbox = self.get_hbox(kwargs.pop('hbox', None))
 
-        info = imp.find_module(name, ['plugins'])
-        if info[0] == None:
-            log.error('No such plugin')
-            return
+        plugin, mod = load_plugin(name, index, kwargs)
+        if not plugin: return
 
-        try:
-            mod = imp.load_module(name, *info)
+        if not hbox:
+            size = (self.size[0], self.size[1] / self.rows)
+            frame = Frame(plugin, mod, size)
+            self.widgets.append(frame)
+        else:
+            hbox.add_child(plugin)
 
-            if not hasattr(mod, 'api'):
-                log.error('Plugin does not define API')
-
-            # Allocate new plugin
-            plugin = mod.factory()
-            plugin.log = log
-            attr_table = plugin.attributes()
-
-            # Find ev. hbox
-            hbox = self.get_hbox(kwargs.pop('hbox', None))
-
-            # Set all attributes
-            for attr in attr_table.values():
-                if attr.name not in kwargs and not attr.auto: continue
-                v = kwargs.get(attr.name, attr.default)
-                try:
-                    attr.set(plugin, v)
-                except Exception, e:
-                    traceback.print_exc()
-                    log.error('When setting attibute %s: %s', attr.name, e)
-                try:
-                    del kwargs[attr.name]
-                except:
-                    pass
-
-            # Warn about unused variables
-            for attr in kwargs.keys():
-                plugin.log.warning('No such attribute: %s', attr)
-
-            # Initialize plugin
-            plugin.init()
-
-            plugin.log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
-
-            if not hbox:
-                size = (self.size[0], self.size[1] / self.rows)
-                frame = Frame(plugin, mod, size)
-                self.widgets.append(frame)
-            else:
-                hbox.add_child(plugin)
-            self.plugins.append((plugin, mod))
-        except:
-            traceback.print_exc()
-            print >> sys.stderr, 'When trying to add plugin %s' % name
-        finally:
-            info[0].close()
+        self.plugins.append((plugin, mod))
 
     def init_all_plugins(self):
         for plugin, mod in self.plugins:

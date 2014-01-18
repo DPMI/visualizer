@@ -5,7 +5,58 @@ from opengl import PluginOpenGL
 import os, sys, re
 import imp
 import traceback
+import logging
 from glob import glob
+
+def load(name, index, kwargs):
+    log = logging.getLogger('%s/%s' % (name, index))
+
+    info = imp.find_module(name, ['plugins'])
+    if info[0] == None:
+        log.error('No such plugin')
+        return None, None
+
+    try:
+        mod = imp.load_module(name, *info)
+
+        if not hasattr(mod, 'api'):
+            log.error('Plugin does not define API')
+
+        # Allocate new plugin
+        plugin = mod.factory()
+        plugin.log = log
+        attr_table = plugin.attributes()
+
+        # Set all attributes
+        for attr in attr_table.values():
+            if attr.name not in kwargs and not attr.auto: continue
+            v = kwargs.get(attr.name, attr.default)
+            try:
+                attr.set(plugin, v)
+            except Exception, e:
+                traceback.print_exc()
+                log.error('When setting attibute %s: %s', attr.name, e)
+            try:
+                del kwargs[attr.name]
+            except:
+                pass
+
+        # Warn about unused variables
+        for attr in kwargs.keys():
+            plugin.log.warning('No such attribute: %s', attr)
+
+        # Initialize plugin
+        plugin.init()
+
+        plugin.log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
+    except:
+        traceback.print_exc()
+        print >> sys.stderr, 'When trying to add plugin %s' % name
+        return None, None
+    finally:
+        info[0].close()
+
+    return plugin, mod
 
 def trim(docstring):
     """Parse docstring. From python docs."""
