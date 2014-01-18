@@ -365,7 +365,7 @@ def run():
     filename = 'visualizer.log'
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
-    ch.setFormatter(logging.Formatter('[%(name)-12s] [%(levelname)-8s] %(message)s'))
+    ch.setFormatter(logging.Formatter('[%(name)-16s] [%(levelname)-8s] %(message)s'))
     fh = logging.FileHandler(filename)
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(logging.Formatter('[%(asctime)s] [%(name)-12s] [%(levelname)-8s] %(message)s', '%a, %d %b %Y %H:%M:%S %z'))
