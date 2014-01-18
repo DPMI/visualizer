@@ -344,6 +344,22 @@ Plugins:
 For help about a specific plugin use -H NAME
 """.format(plugin='\n'.join(['  - %s: %s' % x for x in plugin.available()]))
 
+def setup_logging():
+    filename = 'visualizer.log'
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(logging.Formatter('[%(name)-16s] [%(levelname)-8s] %(message)s'))
+    fh = logging.FileHandler(filename)
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter('[%(asctime)s] [%(name)-12s] [%(levelname)-8s] %(message)s', '%a, %d %b %Y %H:%M:%S %z'))
+    log = logging.getLogger('')
+    log.addHandler(ch)
+    log.addHandler(fh)
+    log.setLevel(logging.DEBUG)
+    logging.getLogger('OpenGL.extensions').setLevel(logging.WARNING)
+    log.debug('Visualizer started')
+    return log
+
 def run():
     print >> sys.stderr
     print >> sys.stderr, '#' * 60
@@ -361,20 +377,7 @@ def run():
         plugin.usage(args.plugin)
         sys.exit(0)
 
-    # setup logging
-    filename = 'visualizer.log'
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    ch.setFormatter(logging.Formatter('[%(name)-16s] [%(levelname)-8s] %(message)s'))
-    fh = logging.FileHandler(filename)
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(logging.Formatter('[%(asctime)s] [%(name)-12s] [%(levelname)-8s] %(message)s', '%a, %d %b %Y %H:%M:%S %z'))
-    log = logging.getLogger('')
-    log.addHandler(ch)
-    log.addHandler(fh)
-    log.setLevel(logging.DEBUG)
-    logging.getLogger('OpenGL.extensions').setLevel(logging.WARNING)
-    log.debug('Visualizer started')
+    log = setup_logging()
 
     if not args.config:
         if not os.path.exists('visualizer.conf'):
