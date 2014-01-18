@@ -5,13 +5,17 @@ from opengl import PluginOpenGL
 import os, sys, re
 import imp
 import traceback
+import itertools
 import logging
 from glob import glob
+from os.path import join, dirname, basename, splitext
 
 def load(name, index, kwargs):
+    global search_path
+
     log = logging.getLogger('%s/%s' % (name, index))
 
-    info = imp.find_module(name, ['plugins'])
+    info = imp.find_module(name, search_path)
     if info[0] == None:
         log.error('No such plugin')
         return None, None
@@ -58,6 +62,20 @@ def load(name, index, kwargs):
 
     return plugin, mod
 
+def platform_dir():
+    try:
+        from distutils.util import get_platform
+        return 'lib.%s-%s' % (get_platform(), sys.version[0:3])
+    except ImportError:
+        pass
+
+    # hack based on distutils
+    (osname, host, release, version, machine) = os.uname()
+    if osname[:5] == "linux":
+        return  "lib.%s-%s-%s" % (osname, machine, sys.version[0:3])
+    else:
+        raise NotImplementedError, 'platform_dir not implemented for this platform, either install distutils or add custom implemenation'
+
 def trim(docstring):
     """Parse docstring. From python docs."""
     if not docstring:
@@ -85,8 +103,10 @@ def trim(docstring):
     return '\n'.join(trimmed)
 
 def usage(name):
+    global search_path
+
     try:
-        info = imp.find_module(name, ['plugins'])
+        info = imp.find_module(name, search_path)
     except ImportError, e:
         print >> sys.stderr, e
         return
@@ -121,12 +141,22 @@ def usage(name):
     finally:
         info[0].close()
 
+def matching_files():
+    global search_path
+    patterns = itertools.product(search_path, ['*.py', '*.so'])
+    for x in itertools.chain(*[glob(join(*args)) for args in patterns]):
+        base = splitext(basename(x))
+        dir = dirname(x)
+        yield tuple(base + (dir,))
+
 def available():
+    global search_path
     ignore = re.compile('sample_|stub')
-    for plugin in [os.path.splitext(os.path.basename(x))[0] for x in glob('plugins/*.py')]:
+
+    for plugin, _, path in matching_files():
         if ignore.match(plugin) is not None: continue
 
-        info = imp.find_module(plugin, ['plugins'])
+        info = imp.find_module(plugin, search_path)
         try:
             mod = imp.load_module(plugin, *info)
             if not hasattr(mod, 'name'): continue
@@ -135,3 +165,8 @@ def available():
             traceback.print_exc()
         finally:
             info[0].close()
+
+search_path = [
+    'plugins',
+    join('build', platform_dir())
+]
