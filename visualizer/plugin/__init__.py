@@ -22,7 +22,7 @@ def set_attributes(plugin, kwargs):
             attr.set(plugin, v)
         except Exception, e:
             traceback.print_exc()
-            log.error('When setting attibute %s: %s', attr.name, e)
+            plugin.log.error('When setting attibute %s: %s', attr.name, e)
 
         try:
             del kwargs[attr.name]
