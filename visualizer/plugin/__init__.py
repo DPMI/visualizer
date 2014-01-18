@@ -57,7 +57,7 @@ def load(name, index, kwargs):
         set_attributes(plugin, kwargs)
         plugin.init()
 
-        plugin.log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
+        plugin.log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>) from {1[1]}'.format(mod, info))
     except:
         traceback.print_exc()
         print >> sys.stderr, 'When trying to add plugin %s' % name
