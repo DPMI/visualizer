@@ -10,6 +10,29 @@ import logging
 from glob import glob
 from os.path import join, dirname, basename, splitext
 
+def set_attributes(plugin, kwargs):
+    attr_table = plugin.attributes()
+
+    # Set all attributes
+    for attr in attr_table.values():
+        if attr.name not in kwargs and not attr.auto: continue
+        v = kwargs.get(attr.name, attr.default)
+
+        try:
+            attr.set(plugin, v)
+        except Exception, e:
+            traceback.print_exc()
+            log.error('When setting attibute %s: %s', attr.name, e)
+
+        try:
+            del kwargs[attr.name]
+        except:
+            pass
+
+    # Warn about unused variables
+    for attr in kwargs.keys():
+        plugin.log.warning('No such attribute: %s', attr)
+
 def load(name, index, kwargs):
     global search_path
 
@@ -29,27 +52,9 @@ def load(name, index, kwargs):
         # Allocate new plugin
         plugin = mod.factory()
         plugin.log = log
-        attr_table = plugin.attributes()
-
-        # Set all attributes
-        for attr in attr_table.values():
-            if attr.name not in kwargs and not attr.auto: continue
-            v = kwargs.get(attr.name, attr.default)
-            try:
-                attr.set(plugin, v)
-            except Exception, e:
-                traceback.print_exc()
-                log.error('When setting attibute %s: %s', attr.name, e)
-            try:
-                del kwargs[attr.name]
-            except:
-                pass
-
-        # Warn about unused variables
-        for attr in kwargs.keys():
-            plugin.log.warning('No such attribute: %s', attr)
 
         # Initialize plugin
+        set_attributes(plugin, kwargs)
         plugin.init()
 
         plugin.log.info('Loaded plugin "{0.name}" v-{0.version} {0.date} ({0.author[0]} <{0.author[1]}>)'.format(mod))
