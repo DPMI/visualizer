@@ -51,10 +51,11 @@ Each plugin is its own file and must contain a few objects:
     date = '2014-01-12'
     version = 0
     api = 1
+    deps = ['foo'] # optional
 
     def factory(): pass
 
-The first two fields is for external identification only. The `date` and `version` variables should be bumped upon changes but neither is used internally by the visualizer but rather used when debugging. Next the `api` variable defines what API this plugin uses. Currently there is only a single API present, namely version 1. Future versions may define other APIs. Lastly the `factory` object is called when an instance of the plugin is required. You can either pass a class object `factory = MyPlugin` or write a custom function.
+The first two fields is for external identification only. The `date` and `version` variables should be bumped upon changes but neither is used internally by the visualizer but rather used when debugging. Next the `api` variable defines what API this plugin uses. Currently there is only a single API present, namely version 1. Future versions may define other APIs. The optional `deps` variable is a list of modules to import, if the plugin requires non-standard libraries (or numpy, opengl, cairo and pango) they should be listed here instead of plain `import foo` as then the plugin would fail to load at all, even when just querying documentation or metadata. Anything listed will be imported just as `import foo` would have done. Lastly the `factory` object is called when an instance of the plugin is required. You can either pass a class object `factory = MyPlugin` or write a custom function.
 
 There is two flavors of plugins: [Cairo](http://cairographics.org/) or pure OpenGL. Cairo plugins is best suited when vector graphics is required but is slower to render compared to hardware accelerated OpenGL. See `plugins/sample_cairo.py` and `plugins/sample_opengl.py` respectively. Cairo sample contains extended documentation and is more suitable for starters.
 

@@ -3,7 +3,7 @@ from cairo import PluginCairo
 from opengl import PluginOpenGL
 
 import os, sys, re
-import imp
+import imp, importlib
 import traceback
 import itertools
 import logging
@@ -33,6 +33,16 @@ def set_attributes(plugin, kwargs):
     for attr in kwargs.keys():
         plugin.log.warning('No such attribute: %s', attr)
 
+def load_deps(mod):
+    if not hasattr(mod, 'deps'): return
+    for dep in getattr(mod, 'deps'):
+        try:
+            mod[dep] = importlib.import_module(dep)
+        except ImportError, e:
+            mod.log.error(e)
+            return False
+    return True
+
 def load(name, index, kwargs):
     global search_path
 
@@ -45,9 +55,14 @@ def load(name, index, kwargs):
 
     try:
         mod = imp.load_module(name, *info)
+        mod.log = log
 
         if not hasattr(mod, 'api'):
             log.error('Plugin does not define API')
+
+        # Load all additional libraries
+        if not load_deps(mod):
+            return None, None
 
         # Allocate new plugin
         plugin = mod.factory()
