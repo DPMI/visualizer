@@ -43,12 +43,14 @@ def load_deps(mod):
             return False
     return True
 
-def load(name, index, kwargs):
+def load(name, index=0, kwargs={}):
     global search_path
 
     log = logging.getLogger('%s/%s' % (name, index))
 
-    info = imp.find_module(name, search_path)
+    subpath = os.path.dirname(name)
+    name = os.path.basename(name)
+    info = imp.find_module(name, [os.path.join(x, subpath) for x in search_path])
     if info[0] == None:
         log.error('No such plugin')
         return None, None
