@@ -3,6 +3,8 @@ from OpenGL.GL import *
 
 class Frame(container.Container):
     def __init__(self, plugin, mod, size):
+        container.Container.__init__(self)
+        self.rowspan = plugin.rowspan
         self.plugin = plugin
         self.mod = mod
         self.on_resize(size)

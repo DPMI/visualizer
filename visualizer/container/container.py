@@ -1,4 +1,7 @@
 class Container(object):
+    def __init__(self):
+        self.rowspan = 1
+
     def blit(self):
         raise NotImplementedError
 
@@ -7,4 +10,3 @@ class Container(object):
 
     def render(self, t):
         raise NotImplementedError
-

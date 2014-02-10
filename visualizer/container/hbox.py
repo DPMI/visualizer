@@ -6,6 +6,7 @@ class HBox(container.Container):
     framerate = 0
 
     def __init__(self, name, size):
+        container.Container.__init__(self)
         self.log = logging.getLogger(name)
         self.children = []
         self.size = size
