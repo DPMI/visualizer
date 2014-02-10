@@ -88,6 +88,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.transition_timer = None    # id of timer
         self.transition_step = 0.0
         self.transition_enabled = False # @note should make a FSM
+        self.scrollrows = 1             # number of rows to scroll during transition
         self.msgwidget = None
 
         # widget setup
@@ -145,7 +146,13 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def init_all_plugins(self):
         for plugin, mod in self.plugins:
             self.init_plugin(plugin)
+
+        # fill at least one page
         while len(self.widgets) < self.rows:
+            self.widgets.append(Blank())
+
+        # ensure all pages is full
+        while len(self.widgets) % self.scrollrows > 0:
             self.widgets.append(Blank())
 
     def init_plugin(self, plugin):
@@ -224,6 +231,14 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             log.warning('transition time is less than duration, setting t = d')
             t = d
 
+        self.scrollrows = config.getint('transition', 'scrollrows', 1)
+        if self.scrollrows > self.rows:
+            self.scrollrows = self.rows
+            log.warning('Scroll rows is larger that number of rows, truncating to %d', self.scrollrows)
+        if self.rows % self.scrollrows != 0:
+            self.scrollrows = 1
+            log.warning('Scroll rows is not a multiple of rows, using %d instead', self.scrollrows)
+
         if self.transition_timer:
             gobject.source_remove(self.transition_timer)
         self.transition_timer = gobject.timeout_add(int(t * 1000), self.transition)
@@ -232,7 +247,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def transition(self):
         # lagging or to short, reset
         if self.transition_enabled:
-            self.current = (self.current + 1) % max(self.rows, len(self.widgets))
+            self.current = (self.current + self.scrollrows) % max(self.rows, len(self.widgets))
             self.transition_step = 0.0
 
         self.transition_enabled = True
@@ -243,7 +258,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         if self.transition_step > 1.0:
             self.transition_enabled = False
             self.transition_step = 0.0
-            self.current = (self.current + 1) % max(self.rows, len(self.widgets))
+            self.current = (self.current + self.scrollrows) % max(self.rows, len(self.widgets))
             return
 
         # the value is allowed to be > 1.0 (clamped when used) so 1.0 will
@@ -276,7 +291,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPushMatrix()
         glLoadIdentity()
 
-        offset = (-1.0 / self.rows) * min(self.transition_step, 1.0)
+        offset = (-1.0 / self.rows) * min(self.transition_step, 1.0) * self.scrollrows
         glTranslate(0, offset, 0)
         glScale(1, 1.0 / self.rows, 1)
 
@@ -332,7 +347,7 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
     def visible_rows(self):
         n = self.rows
         if self.transition_enabled:
-            n += 1
+            n += self.scrollrows
         return n
 
     def visible_widgets(self):
