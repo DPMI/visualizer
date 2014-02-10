@@ -21,8 +21,14 @@ class TextPlugin(PluginCairo):
 
     @attribute(type=str, sample="sample.txt")
     def filename(self, value):
+        """Set text from filename"""
         with open(value) as fp:
             self.content = fp.read()
+
+    @attribute(name='text', type=str, sample="Lorem ipsum dot sit amet")
+    def set_text(self, value):
+        """Set text from string"""
+        self.content = value.replace('\\n', "\n")
 
     @attribute(type=color, default="(0.95, 0.95, 1.0, 1.0)")
     def background(self, value):
