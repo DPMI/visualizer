@@ -34,8 +34,13 @@ def set_attributes(plugin, kwargs):
         plugin.log.warning('No such attribute: %s', attr)
 
 def load_deps(mod):
-    if not hasattr(mod, 'deps'): return
-    for dep in getattr(mod, 'deps'):
+    deps = getattr(mod, 'deps', [])
+    try:
+        iter(deps)
+    except TypeError:
+        return
+
+    for dep in deps:
         try:
             mod[dep] = importlib.import_module(dep)
         except ImportError, e:
