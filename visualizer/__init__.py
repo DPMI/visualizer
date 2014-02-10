@@ -371,11 +371,16 @@ def run():
     parser = argparse.ArgumentParser(epilog=usage(), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-f', '--config', default=None, help='Configuration-file')
     parser.add_argument('-H', dest='plugin', type=str, metavar='PLUGIN', help="Show help for plugin")
+    parser.add_argument('--test', action='store_true', help="Run tests")
     args = parser.parse_args()
 
     if args.plugin:
         plugin.usage(args.plugin)
         sys.exit(0)
+
+    if args.test:
+        import tests
+        tests.run() # calls sys.exit
 
     log = setup_logging()
 
