@@ -36,6 +36,12 @@ Stub configuration:
 
 Each section (with the exception of `general` and `transition`) creates a new item, e.g. "[plugin:foo/0]" creates a new plugin of type foo. The `/0` at the end is the index of this plugin which is only used to separate different instances of the same plugin.
 
+Common attributes for all plugins is
+
+* framerate: override default framerate calculation (use with caution).
+* rowspan: have the plugin occupy more than one row (see example/rowspan.conf).
+* hbox: position multiple plugin on a single row (see example/hbox.conf).
+
 ## Consumers and generators
 
 Consumers from DPMI reads packet traces, analyzes the data and generates some form of output. From the visualizers point of view a consumer is an input source (similarly plugins is considered output sinks). Each consumer is given a datasource name which is just used to bind data together. A consumer which generates bitrate data can be given the datasource name "br10" and a plugin can be configured to accept data from the datasource with that name.

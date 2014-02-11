@@ -19,6 +19,7 @@ class PluginBase(object):
         self.dataset = []
         self._invalidated = True
         self._last_render = 0
+        self.rowspan = 1
 
         methods = inspect.getmembers(self, lambda x: inspect.ismethod(x) and hasattr(x, '_attribute'))
         self._attributes = dict([(func._attribute.name, func._attribute) for name, func in methods])
@@ -47,6 +48,13 @@ class PluginBase(object):
     def set_framerate(self, value):
         """Override rendering framerate."""
         self.framerate = int(value)
+
+    @attribute(type=int, name='rowspan', default=1, auto=False)
+    def set_rowspan(self, value):
+        """Number of rows to occupy"""
+        value = int(value)
+        if value <= 0: raise ValueError, 'rowspan must be >= 1'
+        self.rowspan = value
 
     @attribute(type=str, sample="NAME:csv:extract(2)")
     def source(self, value):
