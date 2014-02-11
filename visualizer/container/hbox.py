@@ -19,6 +19,7 @@ class HBox(container.Container):
             raise ValueError, 'Sum of widths must be 100%% (was %.1f%%)' % (sum(factors)*100)
         self.width = value
         self.factors = factors
+        self.do_resize()
 
     def add_child(self, plugin):
         self.children.append(plugin)
