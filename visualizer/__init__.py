@@ -3,7 +3,6 @@ pygtk.require('2.0')
 import gtk
 import gobject
 import argparse
-import ConfigParser as configparser
 import sys, os
 from os.path import dirname, join
 import re
@@ -12,10 +11,10 @@ import time
 from select import select
 import errno
 import socket
-from functools import wraps
 from signal import signal, SIGUSR1, SIGINT, SIGHUP
 import itertools
 import logging
+import config
 
 import consumer, plugin
 from _canvas import Canvas
@@ -23,36 +22,8 @@ from statistics import Statistics
 
 re_attrib = re.compile(r'\$[{]([^}]*)[}]')
 
-def ConfigParserWrapper(func):
-    @wraps(func)
-    def outer(x):
-        def inner(self, section, option, default=None):
-            try:
-                return func(self, section, option)
-            except (configparser.NoOptionError, configparser.NoSectionError):
-                if default is not None:
-                    return default
-                raise
-        return inner
-    return outer
-
-class ConfigParser(configparser.SafeConfigParser):
-    @ConfigParserWrapper(configparser.SafeConfigParser.get)
-    def get(self): pass
-
-    @ConfigParserWrapper(configparser.SafeConfigParser.getint)
-    def getint(self): pass
-
-    @ConfigParserWrapper(configparser.SafeConfigParser.getfloat)
-    def getfloat(self): pass
-
-    @ConfigParserWrapper(configparser.SafeConfigParser.getboolean)
-    def getboolean(self): pass
-
 class Main:
     cursor_timeout = 2000 # delay in ms until hiding cursor
-    transition = 15
-    rows = 3
 
     def __init__(self, config, filename):
         self.log = logging.getLogger('main')
@@ -62,8 +33,8 @@ class Main:
         self.filename = filename
 
         # config defaults
-        rows = config.getint('general', 'rows', Main.rows)
-        self.fullscreen = config.getboolean('general', 'fullscreen', False)
+        rows = config.getint('general/rows', 3)
+        self.fullscreen = config.getboolean('general/fullscreen', False)
 
         # Create window and get widget handles.
         builder = gtk.Builder()
@@ -281,60 +252,69 @@ class Main:
 
         d = {}
         for k,v in attrib.iteritems():
-            d[k] = re_attrib.sub(sub, v)
+            if k == 'comment': continue
+            if isinstance(v, basestring):
+                d[k] = re_attrib.sub(sub, v)
+            else:
+                d[k] = v
         return d
 
-    def parse_config(self, config):
-        # general config
-        self.visualizer.set_transition(config)
+    def parse_consumers(self, config):
+        for i, desc in enumerate(config.consumers()):
+            what = desc.pop('type')
+            name = 'name' in desc and desc.pop('name') or str(i)
+            attrib = self.parse_attrib(desc)
 
-        # plugins and consumers
-        pattern = re.compile('(?:(\w+):)?(\w+)(?:/(\w+))?')
-        for section in config.sections():
-            x = pattern.match(section)
-            if x is None:
-                self.log.error('Failed to parse section "%s", ignoring.', section)
+            if what in ['consumer', 'tcp']:
+                if 'host' not in attrib:
+                    self.log.error('consumer/%s missing host, ignored' % name)
+                    continue
+                if 'port' not in attrib:
+                    self.log.error('consumer/%s missing port, ignored' % name)
+                    continue
+                con = consumer.Consumer(attrib['host'], attrib['port'], name)
+            elif what == 'process':
+                if 'command' not in attrib:
+                    self.log.error('process/%s missing command, ignored' % name)
+                    continue
+                if 'dataset' not in attrib:
+                    self.log.error('process/%s missing dataset, ignored' % name)
+                    continue
+                con = consumer.Process(attrib['command'], attrib['dataset'], name)
+            else:
+                self.log.error('consumer/%s has unknown type %s, ignored', name, what)
                 continue
-            ns, key, index = x.groups()
-            if ns is None: ns = key
-            if index is None: index = '0'
-            a = self.parse_attrib(dict(config.items(section)))
+            self.add_consumer(con)
 
-            if ns == 'consumer':
-                if 'host' not in a:
-                    self.log.error('consumer/%s missing host, ignored' % index)
-                    continue
-                if 'port' not in a:
-                    self.log.error('consumer/%s missing port, ignored' % index)
-                    continue
+    def parse_plugins(self, config):
+        for i, desc in enumerate(config.plugins()):
+            what = desc.pop('type')
+            name = 'name' in desc and desc.pop('name') or str(i)
+            attrib = self.parse_attrib(desc)
 
-                con = consumer.Consumer(a['host'], a['port'], index)
-                self.add_consumer(con)
+            try:
+                self.visualizer.add_plugin(what, name, attrib)
+            except Exception, e:
+                self.log.error('failed to add plugin %s/%s: %s', what, name, e)
 
-            if ns == 'process':
-                if 'command' not in a:
-                    self.log.error('process/%s missing command, ignored' % index)
-                    continue
-                if 'dataset' not in a:
-                    self.log.error('process/%s missing dataset, ignored' % index)
-                    continue
+    def parse_hbox(self, config):
+        for i, desc in enumerate(config.hbox()):
+            name = 'name' in desc and desc.pop('name') or str(i)
+            if 'type' in desc: desc.pop('type')
+            attrib = self.parse_attrib(desc)
 
-                con = consumer.Process(a['command'], a['dataset'], index)
-                self.add_consumer(con)
+            hbox = self.visualizer.get_hbox(name)
+            for k,v in attrib.iteritems():
+                if k == 'width':
+                    hbox.set_width(v)
+                else:
+                    self.log.warning('hbox has no such attribute: %s', k)
 
-            if ns == 'plugin':
-                try:
-                    self.visualizer.add_plugin(key, index, a)
-                except Exception, e:
-                    self.log.error('failed to add plugin %s/%s: %s', key, index, e)
-
-            if ns == 'hbox':
-                hbox = self.visualizer.get_hbox(index)
-                for k,v in a.iteritems():
-                    if k == 'width':
-                        hbox.set_width(v)
-                    else:
-                        self.log.warning('hbox has no such attribute: %s', k)
+    def parse_config(self, config):
+        self.visualizer.set_transition(config)
+        self.parse_consumers(config)
+        self.parse_plugins(config)
+        self.parse_hbox(config)
 
 def usage():
     return """\
@@ -394,10 +374,9 @@ def run():
         sys.exit(1)
 
     # parse config
-    config = ConfigParser()
-    config.read(args.config)
+    cfg = config.read(args.config)
 
-    pidlock = config.get('general', 'lockfile', '/var/run/visualizer.lock')
+    pidlock = cfg.get('general/lockfile')
     if os.path.exists(pidlock):
         print >> sys.stderr, pidlock, 'exists, if the visualizer isn\'t running manually remove the file before continuing'
         sys.exit(1)
@@ -406,7 +385,7 @@ def run():
         pid.write(str(os.getpid()))
 
     try:
-        main = Main(config, filename=args.config)
+        main = Main(cfg, filename=args.config)
         gtk.main()
     finally:
         os.unlink(pidlock)

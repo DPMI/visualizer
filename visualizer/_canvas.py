@@ -228,19 +228,19 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         global logging
         log = logging.getLogger('canvas')
 
-        if config.has_option('general', 'transition'):
+        if config.has_option('general/transition'):
             log.warning('Old style transition set, please migrate to new options (see documentation)')
             t = config.getfloat('general', 'transition', 15.0)
             d = 1.5
         else:
-            t = config.getfloat('transition', 'time', 15.0)
-            d = config.getfloat('transition', 'duration', 1.5)
+            t = config.getfloat('transition/time', 15.0)
+            d = config.getfloat('transition/duration', 1.5)
 
         if t < d:
             log.warning('transition time is less than duration, setting t = d')
             t = d
 
-        self.scrollrows = config.getint('transition', 'scrollrows', 1)
+        self.scrollrows = config.getint('transition/scrollrows', 1)
         if self.scrollrows > self.rows:
             self.scrollrows = self.rows
             log.warning('Scroll rows is larger that number of rows, truncating to %d', self.scrollrows)
