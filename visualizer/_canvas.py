@@ -266,6 +266,11 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
             self.transition_next()
             self.transition_step = 0.0
 
+        # no transitions is needed if only one page is needed
+        n = sum([x.rowspan for x in self.widgets])
+        if n <= self.scrollrows:
+            return False
+
         self.transition_enabled = True
         self.transition_time = time.time()
         return True
