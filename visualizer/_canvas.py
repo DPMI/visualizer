@@ -116,7 +116,11 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         return GLContext(self)
 
     def get_hbox(self, name):
-        if not name: return None
+        if name is None: return None
+
+        # name must be string, or else '0' and 0 would be different hbox (which
+        # happens when using yaml config)
+        name = str(name)
 
         if name in self.hbox:
             return self.hbox[name]
