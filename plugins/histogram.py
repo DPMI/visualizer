@@ -65,7 +65,7 @@ class Histogram(PluginCairo):
 
         If set bars will be filled with the specified color.
         """
-        self.fill_color = eval(value)
+        self.fill_color = value
 
     def on_data(self, dataset, raw):
         flt = self.filter[dataset]

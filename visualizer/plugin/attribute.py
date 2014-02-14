@@ -1,6 +1,43 @@
+import re
+
 # used for attribute type
 class color:
-    pass
+    def __init__(self, val):
+        if isinstance(val, basestring):
+            val = color.from_string(val)
+
+        # append alpha if only using r,g,b
+        if len(val) == 3:
+            val = val + (1,)
+
+        self.value = val
+
+    @staticmethod
+    def from_string(val):
+        val = val.strip().lower()
+
+        # (r,g,b) or (r,g,b,a)
+        m = re.match(r'\((.*)\)', val)
+        if m is not None:
+            return tuple([float(x.strip()) for x in m.group(1).split(',')])
+
+        # rrggbb or rrggbbaa
+        m = re.match(r'#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?', val)
+        if m is not None:
+            return tuple([float(int('0x'+x,16)) / 255.0 for x in m.groups() if x is not None])
+
+        # rgb or rgba
+        m = re.match(r'#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])?', val)
+        if m is not None:
+            return tuple([float(int('0x'+x+x,16)) / 255.0 for x in m.groups() if x is not None])
+
+        raise ValueError, '%s is not a valid color' % val
+
+    def as_tuple(self):
+        return self.value
+
+    def __getitem__(self, i):
+        return self.value[i]
 
 class Attribute():
     # @param name Name of this attribute

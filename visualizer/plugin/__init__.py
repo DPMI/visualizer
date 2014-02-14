@@ -17,9 +17,10 @@ def set_attributes(plugin, kwargs):
     for attr in attr_table.values():
         if attr.name not in kwargs and not attr.auto: continue
         v = kwargs.get(attr.name, attr.default)
+        if v is None: continue
 
         try:
-            attr.set(plugin, v)
+            attr.set(plugin, attr.type(v))
         except Exception, e:
             traceback.print_exc()
             plugin.log.error('When setting attibute %s: %s', attr.name, e)

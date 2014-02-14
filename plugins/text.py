@@ -46,13 +46,13 @@ class TextPlugin(PluginCairo):
         """Set text from string"""
         self.content = value.replace('\\n', "\n")
 
-    @attribute(type=color, default="(0.95, 0.95, 1.0, 1.0)")
+    @attribute(type=color, default="(0.95, 0.95, 1.0)")
     def background(self, value):
-        self.bgcolor = eval(value)
+        self.bgcolor = value
 
-    @attribute(type=color, default="(0.0, 0.0, 0.0, 1.0)")
+    @attribute(type=color, default="(0.0, 0.0, 0.0)")
     def foreground(self, value):
-        self.fgcolor = eval(value)
+        self.fgcolor = value
 
     def __init__(self):
         PluginCairo.__init__(self)

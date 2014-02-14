@@ -86,7 +86,7 @@ class Graph(PluginCairo):
     def ylines(self, value):
         self._ylines = [float(x) for x in value.split(';')]
 
-    @attribute(type=int)
+    @attribute(type=str)
     def samples(self, value):
         value = value.strip()
 
