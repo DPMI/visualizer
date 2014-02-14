@@ -1,10 +1,18 @@
 from visualizer.plugin import PluginCairo, attribute, color
+from pango import ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT
 
 name = 'Static text content plugin'
 author = ('David Sveningsson', 'ext@sidvind.com')
 date = '2013-01-31'
 version = 2
 api = 1
+
+alignment = {
+    'left': ALIGN_LEFT,
+    'right': ALIGN_RIGHT,
+    'center': ALIGN_CENTER,
+    'justify': 'justify',
+}
 
 class TextPlugin(PluginCairo):
     """Render static text"""
@@ -14,6 +22,14 @@ class TextPlugin(PluginCairo):
     # added so it wont show up in help
     def source(self):
         pass
+
+    @attribute(name='align', type=str, default='left')
+    def set_alignment(self, name):
+        global alignment
+        val = alignment.get(name.lower(), None)
+        if val is None:
+            raise ValueError, '%s is not a valid alignment' % name
+        self.alignment = val
 
     @attribute(type=str, sample="monospace 14")
     def font(self, value):
@@ -47,7 +63,17 @@ class TextPlugin(PluginCairo):
     def do_render(self):
         self.clear(self.bgcolor)
         self.cr.translate(10,5)
-        self.text(self.content, self.text_font, color=self.fgcolor, justify=True, width=self.width-20)
+
+        kwargs = {
+            'width': self.width-20,
+            'color': self.fgcolor,
+        }
+        if self.alignment != 'justify':
+            kwargs['alignment'] = self.alignment
+        else:
+            kwargs['justify'] = True
+
+        self.text(self.content, self.text_font, **kwargs)
 
 def factory(**kwargs):
     item = TextPlugin()
