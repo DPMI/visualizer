@@ -10,3 +10,6 @@ class Container(object):
 
     def render(self, t):
         raise NotImplementedError
+
+    def num_children(self):
+        return 1

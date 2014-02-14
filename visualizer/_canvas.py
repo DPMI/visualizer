@@ -151,6 +151,9 @@ class Canvas(gtk.DrawingArea, gtk.gtkgl.Widget):
         for plugin, mod in self.plugins:
             self.init_plugin(plugin)
 
+        # remove empty containers (e.g. empty hboxes)
+        self.widgets = [x for x in self.widgets if x.num_children() > 0]
+
         # fill at least one page
         while sum([x.rowspan for x in self.widgets]) < self.rows:
             self.widgets.append(Blank())

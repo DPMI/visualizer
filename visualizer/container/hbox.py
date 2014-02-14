@@ -73,3 +73,6 @@ class HBox(container.Container):
     def __exit__(self, type, value, traceback):
         for plugin in self.children:
             plugin.unlock()
+
+    def num_children(self):
+        return len(self.children)
