@@ -35,6 +35,7 @@ class Graph(PluginCairo):
         self.auto = None
         self._xlines = []
         self._ylines = []
+        self._barchart = False
 
         # chart margins
         self.margin = [30, 5, 20, 30] # top right bottom left
@@ -42,6 +43,10 @@ class Graph(PluginCairo):
     @attribute(type=str)
     def title(self, value):
         self._title = value
+
+    @attribute(type=bool, name='bars')
+    def enable_barchart(self, value):
+        self._barchart = value
 
     @attribute(type=str)
     def xtitle(self, value):
@@ -243,7 +248,8 @@ class Graph(PluginCairo):
             c = (c+1)%self.n_samples
             if (c+1)%self.n_samples == self.pos: break
 
-            cr.line_to(n, self.data[c])
+            if self._barchart:
+                cr.line_to(n, self.data[c])
         cr.stroke()
 
         cr.restore()
