@@ -1,4 +1,4 @@
-from visualizer.plugin import PluginCairo, attribute
+from visualizer.plugin import PluginCairo, attribute, unprefix
 import sys
 import numpy
 import cairo
@@ -57,14 +57,14 @@ class Graph(PluginCairo):
         """Value range of X-axis.
 
         """
-        self._range_x = tuple([float(x) for x in value.split(':')])
+        self._range_x = tuple([unprefix(x) for x in value.split(':')])
 
     @attribute(type=str, default="-100:100")
     def range_y(self, value):
         """Value range of Y-axis.
 
         """
-        self._range_y = tuple([float(x) for x in value.split(':')])
+        self._range_y = tuple([unprefix(x) for x in value.split(':')])
 
     @attribute(type=str, sample="150")
     def xlines(self, value):
@@ -76,11 +76,11 @@ class Graph(PluginCairo):
         E.g. "150" produces a vertical line every 150 units.
         """
 
-        self._xlines = [float(x) for x in value.split(';')]
+        self._xlines = [unprefix(x) for x in value.split(';')]
 
     @attribute(type=str)
     def ylines(self, value):
-        self._ylines = [float(x) for x in value.split(';')]
+        self._ylines = [unprefix(x) for x in value.split(';')]
 
     @attribute(type=str)
     def samples(self, value):
@@ -90,7 +90,7 @@ class Graph(PluginCairo):
         p = value.split('/')
         if p[0].strip() == 'auto':
             div = 1.0
-            if len(p) >= 2: div = float(p[1])
+            if len(p) >= 2: div = unprefix(p[1])
             self.auto = div
             value = max((self.size[0] - self.margin[1] - self.margin[3]) / div, 1)
 
@@ -101,7 +101,7 @@ class Graph(PluginCairo):
 
     @attribute(type=int)
     def frequency(self, value):
-        value = float(value)
+        value = unprefix(value)
         if value <= 0.0: raise ValueError('frequency must be greater than 0')
         self.framerate = value
 

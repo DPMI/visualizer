@@ -39,6 +39,31 @@ class color:
     def __getitem__(self, i):
         return self.value[i]
 
+# prefixed float, e.g. 100M -> 100,000,000
+prefix_match = re.compile(r'([\-0-9\.E]+)((?:k|K|M|G|T)(?:iB)?)?$')
+prefix_mul = {
+    'k': 1e3,
+    'm': 1e6,
+    'g': 1e9,
+    't': 1e12,
+    'kib': 2**10,
+    'mib': 2**30,
+    'gib': 2**40,
+    'tib': 2**50,
+}
+def unprefix(value):
+    global prefix_match, prefix_mul
+
+    match = prefix_match.match(value.strip())
+    if not match:
+        raise ValueError, 'invalid literal for prefix: %s' % value
+
+    value, prefix = match.groups()
+    value = float(value)
+    if prefix is not None:
+        value *= prefix_mul[prefix.lower()]
+    return value
+
 class Attribute():
     # @param name Name of this attribute
     # @param type Datatype

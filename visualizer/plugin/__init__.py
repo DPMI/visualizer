@@ -1,4 +1,4 @@
-from attribute import attribute, color
+from attribute import attribute, color, unprefix
 from cairo import PluginCairo
 from opengl import PluginOpenGL
 
