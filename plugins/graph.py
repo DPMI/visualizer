@@ -12,10 +12,6 @@ date = '2011-09-29'
 version = 1
 api = 1
 
-def csv_filter(value):
-    for line in value.splitlines():
-        yield tuple([float(x.strip('\x00')) for x in line.split(';')])
-
 clamp = lambda v,a,b: min(max(v,a),b)
 
 class Graph(PluginCairo):
