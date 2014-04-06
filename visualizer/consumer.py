@@ -192,8 +192,14 @@ class Process:
             if len(events) == 0:
                 break
 
-            data = self.proc.stdout.readline().strip()
+            data = self.proc.stdout.readline()
+            if data == '':
+                self.log.warning('EOF')
+                break
+
+            data = data.strip()
             for func in self.callback:
                 func(self.dataset[0], data)
+
         if n == 0:
-            self.log.warning('possible data overflow on, your computer might be running slow.')
+            self.log.warning('possible data overflow, your computer might be running slow.')
