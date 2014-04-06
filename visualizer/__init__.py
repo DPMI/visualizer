@@ -280,7 +280,7 @@ class Main:
                 if 'dataset' not in attrib:
                     self.log.error('process/%s missing dataset, ignored' % name)
                     continue
-                con = consumer.Process(attrib['command'], attrib['dataset'], name)
+                con = consumer.Process(attrib['command'].format(**attrib), attrib['dataset'], name)
             else:
                 self.log.error('consumer/%s has unknown type %s, ignored', name, what)
                 continue
