@@ -158,7 +158,7 @@ class Graph(PluginCairo):
     def render_title(self):
         self.cr.save()
         self.cr.translate(5, 5)
-        self.text("%s" % self._title, self.font_a, width=400)
+        self.text("%s" % self._title, self.font_a, width=self.size[0])
         self.cr.restore()
 
     def render_chart(self):
