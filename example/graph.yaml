@@ -1,0 +1,68 @@
+general:
+  lockfile: .lock
+  rows: 2
+
+transition:
+  time: 3
+
+consumers:
+  - type: process
+    command: generator/rand.py 0 100 0.01
+    dataset: random
+
+common: &common
+  xtitle: X-axis
+  ytitle: Y-axis
+
+  # samples defines the number of values being saved (after resampling input)
+  # "auto" expands to 1 sample per pixel and "/10" becomes 1 sample per 10
+  # pixels. This is essentially a trade-off between performance and visuals.
+  samples: auto / 10
+  
+  # this is the chart range (lower:upper) where -X:0 means the last X units
+  # (e.g last 60 seconds). Prefixes such as "100M" is allowed.
+  range_x: "-10:0"
+  range_y: "0:100"
+  
+  # ylines adds horizontal lines at the given values (again prefixes is allowed)
+  ylines: "25;50;75"
+  
+  # xlines adds vertical lines every N units
+  xlines: 60
+
+  framerate: 10
+
+plugins:
+  - <<: *common
+    type: graph
+    source: random:csv
+    title: Line chart (10 second span, 10px per sample)
+  - <<: *common
+    type: graph
+    source: random:csv
+    title: Bar chart (10 second span, 10px per sample)
+    bars: true
+  - <<: *common
+    type: graph
+    source: random:csv
+    range_x: "-60:0"
+    title: Line chart (60 second span, 10px per sample)
+  - <<: *common
+    type: graph
+    source: random:csv
+    range_x: "-60:0"
+    title: Bar chart (60 second span, 10px per sample)
+    bars: true
+  - <<: *common
+    type: graph
+    source: random:csv
+    samples: auto / 4
+    framerate: 0
+    title: Line chart (10 second span, 4px per sample, high framerate)
+  - <<: *common
+    type: graph
+    source: random:csv
+    samples: auto / 60
+    range_x: "-60:0"
+    title: Bar chart (60 second span, 60px per sample)
+    bars: true
