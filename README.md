@@ -2,6 +2,10 @@
 
 Visualize data from DPMI consumers.
 
+## Prerequisites 
+  
+    sudo apt-get install python python-dev python-gtk2 python-opengl python-gtkgl python-numpy python-gtkglext1
+
 ## Usage
 
     python -m visualizer -f CONFIG
