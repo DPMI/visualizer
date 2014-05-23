@@ -1,4 +1,5 @@
 import re
+import unittest
 
 # used for attribute type
 class color:
@@ -103,3 +104,17 @@ def attribute(*args, **kwargs):
         func._attribute = Attribute(func, *args, **kwargs)
         return func
     return wrapper
+
+class TestAttributeFunctions(unittest.TestCase):
+    def test_unprefix(self):
+        self.assertEqual(unprefix('1k'), 1000)
+        self.assertEqual(unprefix('1K'), 1000)
+        self.assertEqual(unprefix('2kib'), 2048)
+        self.assertEqual(unprefix('2KiB'), 2048)
+        self.assertEqual(unprefix('2m'), 2000000)
+        self.assertEqual(unprefix('2M'), 2000000)
+        self.assertEqual(unprefix('1.5k'), 1500)
+        self.assertEqual(unprefix(1500), 1500)
+
+if __name__ == '__main__':
+    unittest.main()
