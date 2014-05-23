@@ -104,7 +104,7 @@ class Graph(PluginCairo):
         self.n_samples = int(value)
         self.pos = 0
 
-    @attribute(type=int)
+    @attribute(type=str)
     def frequency(self, value):
         value = unprefix(value)
         if value <= 0.0: raise ValueError('frequency must be greater than 0')
