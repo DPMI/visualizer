@@ -40,7 +40,7 @@ class color:
         return self.value[i]
 
 # prefixed float, e.g. 100M -> 100,000,000
-prefix_match = re.compile(r'([\-0-9\.E]+)((?:k|K|M|G|T)(?:iB)?)?$')
+prefix_match = re.compile(r'([\-0-9\.E]+)((?:k|m|g|t)(?:ib)?)?$', re.IGNORECASE)
 prefix_mul = {
     'k': 1e3,
     'm': 1e6,
