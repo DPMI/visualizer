@@ -54,6 +54,9 @@ prefix_mul = {
 def unprefix(value):
     global prefix_match, prefix_mul
 
+    if not isinstance(value, basestring):
+        return value
+
     match = prefix_match.match(value.strip())
     if not match:
         raise ValueError, 'invalid literal for prefix: %s' % value
